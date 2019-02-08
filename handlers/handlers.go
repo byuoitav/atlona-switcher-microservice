@@ -39,22 +39,18 @@ func SwitchInput(context echo.Context) error {
 }
 
 func ShowOutput(context echo.Context) error {
-	output := context.Param("port")
 	address := context.Param("address")
-	//increment output by 1
-	temp, _ := strconv.Atoi(output)
-	port := temp + 1
-	log.L.Infof("The port number is %v", port)
 
-	resp, err := helpers.GetOutput(address, fmt.Sprintf("%v", port))
+	inport, outport, err := helpers.GetOutput(address)
 	if err != nil {
 		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
 		return context.JSON(http.StatusInternalServerError, err)
 	}
-
-	input, _ := strconv.Atoi(resp)
-	log.L.Infof("input: %d", input)
+	input, _ := strconv.Atoi(inport)
 	input = input - 1
+	log.L.Infof("input: %d", input)
+	output, _ := strconv.Atoi(outport)
+	log.L.Infof("ouput: %d", output)
 
 	return context.JSON(http.StatusOK, status.Input{Input: fmt.Sprintf("%v:%v", input, output)})
 }
