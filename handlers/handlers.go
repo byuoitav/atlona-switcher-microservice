@@ -12,6 +12,8 @@ import (
 	"github.com/labstack/echo"
 )
 
+//TODO create global variable for last time the power was reset
+//Have each function check the time to see if it needs to be reset again
 func SwitchInput(context echo.Context) error {
 	output := context.Param("output")
 
