@@ -1,13 +1,9 @@
 package helpers
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"net"
-	"regexp"
-
-	"github.com/byuoitav/common/structs"
+	"strings"
 
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
@@ -20,28 +16,31 @@ func GetOutput(address string) (string, string, *nerr.E) {
 		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
 		return "", "", nerr.Translate(err).Add("Telnet connection failed")
 	}
-
 	//close connection
 	defer conn.Close()
-
-	log.L.Info("This is coming soon")
-	conn.Write([]byte(fmt.Sprintf("STA\r\n")))
-
-	//capture response
-	var buf bytes.Buffer
-	io.Copy(&buf, conn)
-
-	//regex black magic
-	reg, err := regexp.Compile("Video Output : Input = ([0-9]{2}),")
-	if err != nil {
-		log.L.Errorf("Failed to read from %s : %s", address, err.Error())
-		return "", "", nerr.Translate(err).Add("failed to create regex")
+	status := getPowerStatus(conn)
+	if status != "ON" {
+		return "", "", nerr.Create("Cannot turn device on", "")
 	}
-	ReturnInput := reg.FindAllStringSubmatch(fmt.Sprintf("%s", buf.Bytes()), -1)
+	log.L.Infof("Power status: %s", status)
 
-	input := ReturnInput[0][1]
-	input = input[1:]
-	output := "0"
+	conn.Write([]byte(fmt.Sprintf("Status\r\n")))
+	b, err := readUntil(CARRIAGE_RETURN, conn, 10)
+	if err != nil {
+		return "", "", nerr.Translate(err).Add("failed to read from connection")
+	}
+
+	response := strings.Split(fmt.Sprintf("%s", b), "AV")
+
+	log.L.Infof("response: '%s'", response[0])
+	log.L.Infof("response: '%s'", response[1])
+	input := string(response[0])
+	input = input[len(input)-1:]
+	output := string(response[1])
+	output = output[1:]
+
+	log.L.Infof("input: '%s'", input)
+	log.L.Infof("output: '%s'", output)
 
 	return fmt.Sprintf("%s", input), fmt.Sprintf("%s", output), nil
 }
@@ -57,7 +56,25 @@ func GetHardware(address string) (string, string, string, *nerr.E) {
 	//close connection
 	defer conn.Close()
 
-	ipaddr, verdata, macaddr, err := geteverything(address, conn)
+	status := getPowerStatus(conn)
+	if status != "ON" {
+		return "", "", "", nerr.Create("Cannot turn device on", "")
+	}
+	log.L.Infof("Power status: %s", status)
+
+	ipaddr, err := getIPAddress(address, conn)
+	if err != nil {
+		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
+		return "", "", "", err.Add("Telnet connection failed")
+	}
+
+	verdata, err := getVerData(address, conn)
+	if err != nil {
+		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
+		return "", "", "", err.Add("Telnet connection failed")
+	}
+
+	macaddr, err := getMacAddress(address, conn)
 	if err != nil {
 		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
 		return "", "", "", err.Add("Telnet connection failed")
@@ -67,89 +84,62 @@ func GetHardware(address string) (string, string, string, *nerr.E) {
 	return ipaddr, macaddr, verdata, nil
 }
 
-//goes and gets all of the info (I ran into issues when I tried to seperate all of them into seperate functions)
-func geteverything(address string, conn *net.TCPConn) (string, string, string, *nerr.E) {
-	conn.Write([]byte(fmt.Sprintf("STA\r\n")))
-
-	//capture response
-	var buf bytes.Buffer
-	io.Copy(&buf, conn)
-
-	//regex black magic
-	reg, err := regexp.Compile("Host IP Address = ([0-9]{3}.[0-9]{3}.[0-9]{3}.[0-9]{3})")
+func getIPAddress(address string, conn *net.TCPConn) (string, *nerr.E) {
+	conn.Write([]byte("IPCFG\r\n"))
+	b, err := readUntil(LINE_FEED, conn, 10)
 	if err != nil {
-		log.L.Errorf("Failed to read from %s : %s", address, err.Error())
-		return "", "", "", nerr.Translate(err).Add("failed to create regex")
+		return "", nerr.Translate(err).Add("failed to read IP address from connection")
 	}
-	ReturnInput := reg.FindAllStringSubmatch(fmt.Sprintf("%s", buf.Bytes()), -1)
-	ipaddr := ReturnInput[0][1]
-	log.L.Infof("IP Addr: %s", ipaddr)
-
-	//Version
-	reg, err = regexp.Compile("Version : ([0-9]+.[0-9]+)")
-	if err != nil {
-		log.L.Errorf("Failed to read from %s : %s", address, err.Error())
-		return "", "", "", nerr.Translate(err).Add("failed to create regex")
-	}
-	ReturnInput = reg.FindAllStringSubmatch(fmt.Sprintf("%s", buf.Bytes()), -1)
-	verdata := ReturnInput[0][1]
-	log.L.Infof("Version: %s", verdata)
-
-	//MacAddress
-	reg, err = regexp.Compile("MAC Address = ([A-Z,0-9]{2}:[A-Z,0-9]{2}:[A-Z,0-9]{2}:[A-Z,0-9]{2}:[A-Z,0-9]{2}:[A-Z,0-9]{2})")
-	if err != nil {
-		log.L.Errorf("Failed to read from %s : %s", address, err.Error())
-		return "", "", "", nerr.Translate(err).Add("failed to create regex")
-	}
-	ReturnInput = reg.FindAllStringSubmatch(fmt.Sprintf("%s", buf.Bytes()), -1)
-	macaddr := ReturnInput[0][1]
-	log.L.Infof("MAC: %s", macaddr)
-
-	return ipaddr, verdata, macaddr, nil
+	response := strings.Split(string(b), "IP Addr: ")
+	ipaddr := strings.Split(response[1], "Netmask")
+	ipaddr[0] = strings.TrimSpace(ipaddr[0])
+	log.L.Infof("IP address: %s", ipaddr[0])
+	return ipaddr[0], nil
 }
 
-//Get Link status of all inputs:
-func GetActiveSignal(address string, port string) (structs.ActiveSignal, *nerr.E) {
-	var toReturn structs.ActiveSignal
-	conn, gerr := getConnection(address, true)
-	if gerr != nil {
-		log.L.Errorf("Failed to get connection with %s: %s", address, gerr.Error())
-		return toReturn, nerr.Translate(gerr).Add("Telnet connection failed")
-	}
-	//close connection
-	defer conn.Close()
-
-	conn.Write([]byte(fmt.Sprintf("STA\r\n")))
-
-	//capture response
-	var buf bytes.Buffer
-	io.Copy(&buf, conn)
-
-	//regex black magic
-	reg, err := regexp.Compile("Video Input ([0-9]{2})  : EDID = DEFAULT [0-9]{2},  LINK = ([A-Z]+)")
+//gets software and hardware data
+func getVerData(address string, conn *net.TCPConn) (string, *nerr.E) {
+	conn.Write([]byte("Version\r\n"))
+	log.L.Info("Just wrote the command for version")
+	b, err := readUntil(LINE_FEED, conn, 10)
 	if err != nil {
-		log.L.Errorf("Failed to read from %s : %s", address, err.Error())
-		return toReturn, nerr.Translate(err).Add("failed to create regex")
+		return "", nerr.Translate(err).Add("failed to read VerData from connection")
 	}
-	ReturnInput := reg.FindAllStringSubmatch(fmt.Sprintf("%s", buf.Bytes()), -1)
+	verdata := fmt.Sprintf("%s", b)
+	verdata = strings.TrimSpace(verdata)
 
-	//Loop through all inputs and find requested port status
-	for i := 0; i < 4; i++ {
-		log.L.Infof("testing this=%s with requested port %s", ReturnInput[i][1][1:], port)
-		if port == ReturnInput[i][1][1:] {
-			log.L.Info("They are equal! lets check status")
-			if ReturnInput[i][2] == "ON" {
-				toReturn = structs.ActiveSignal{
-					Active: true,
-				}
-				return toReturn, nil
-			} else {
-				toReturn = structs.ActiveSignal{
-					Active: false,
-				}
-				return toReturn, nil
-			}
-		}
+	log.L.Infof("version: %s", verdata)
+	return verdata, nil
+}
+
+//gets macaddress of device
+func getMacAddress(address string, conn *net.TCPConn) (string, *nerr.E) {
+	conn.Write([]byte("RAtlMac\r\n"))
+	b, err := readUntil(CARRIAGE_RETURN, conn, 10)
+	if err != nil {
+		return "", nerr.Translate(err).Add("failed to read Mac Address from connection")
 	}
-	return toReturn, nil
+	macaddr := fmt.Sprintf("%s", b)
+	macaddr = strings.TrimSpace(macaddr)
+
+	log.L.Infof("macaddress: %s", macaddr)
+	return macaddr, nil
+}
+
+//check to make sure that the device is awake
+func getPowerStatus(conn *net.TCPConn) string {
+	conn.Write([]byte("PWSTA\r\n"))
+	b, _ := readUntil(CARRIAGE_RETURN, conn, 10)
+	status := ""
+	log.L.Infof("Response: %s", b)
+	test := strings.Split(fmt.Sprintf("%s", b), "PW")
+	log.L.Infof("Split: %s", test[1])
+
+	if test[1] != "ON" {
+		conn.Write([]byte("PWON\r\n"))
+		status = "ON"
+	} else {
+		status = "ON"
+	}
+	return status
 }

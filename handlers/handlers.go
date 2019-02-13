@@ -5,13 +5,15 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/byuoitav/atlona-switcher-microservice/helpers"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/status"
 	"github.com/byuoitav/common/structs"
-	"github.com/byuoitav/keydigital-switcher-microservice/helpers"
 	"github.com/labstack/echo"
 )
 
+//TODO create global variable for last time the power was reset
+//Have each function check the time to see if it needs to be reset again
 func SwitchInput(context echo.Context) error {
 	output := context.Param("output")
 
@@ -38,7 +40,6 @@ func SwitchInput(context echo.Context) error {
 	return context.JSON(http.StatusOK, status.Input{Input: fmt.Sprintf("%v:%v", input, output)})
 }
 
-//shows the current input being routed to output
 func ShowOutput(context echo.Context) error {
 	address := context.Param("address")
 
@@ -56,7 +57,6 @@ func ShowOutput(context echo.Context) error {
 	return context.JSON(http.StatusOK, status.Input{Input: fmt.Sprintf("%v:%v", input, output)})
 }
 
-//returns all hardware info
 func HardwareInfo(context echo.Context) error {
 	address := context.Param("address")
 	ipaddr, macaddr, verdata, err := helpers.GetHardware(address)
@@ -71,21 +71,4 @@ func HardwareInfo(context echo.Context) error {
 		},
 		FirmwareVersion: verdata,
 	})
-}
-
-//gets whether or not a requested port has an active hdmi signal
-func GetActiveSignalByPort(context echo.Context) error {
-	address := context.Param("address")
-	input := context.Param("port")
-	port, _ := strconv.Atoi(input)
-	port = port + 1
-
-	log.L.Infof("Getting active signal for port %s on %s", port, address)
-
-	active, err := helpers.GetActiveSignal(address, fmt.Sprintf("%v", port))
-	if err != nil {
-		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
-		return context.JSON(http.StatusInternalServerError, err)
-	}
-	return context.JSON(http.StatusOK, active)
 }
