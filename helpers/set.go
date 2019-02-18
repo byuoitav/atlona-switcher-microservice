@@ -20,11 +20,6 @@ func SwitchInput(address, ouput, input string) (string, *nerr.E) {
 		return "", nerr.Translate(err).Add("Telnet connection failed")
 	}
 
-	status := getPowerStatus(conn)
-	if status != "ON" {
-		return "", nerr.Create("Cannot turn device on", "")
-	}
-
 	//execute telnet command to switch input
 	conn.Write([]byte("x" + input + "AVx" + ouput + "\r\n"))
 	b, err := readUntil(CARRIAGE_RETURN, conn, 10)

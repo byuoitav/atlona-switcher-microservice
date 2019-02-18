@@ -18,11 +18,6 @@ func GetOutput(address string) (string, string, *nerr.E) {
 	}
 	//close connection
 	defer conn.Close()
-	status := getPowerStatus(conn)
-	if status != "ON" {
-		return "", "", nerr.Create("Cannot turn device on", "")
-	}
-	log.L.Infof("Power status: %s", status)
 
 	conn.Write([]byte(fmt.Sprintf("Status\r\n")))
 	b, err := readUntil(CARRIAGE_RETURN, conn, 10)
@@ -55,12 +50,6 @@ func GetHardware(address string) (string, string, string, *nerr.E) {
 	}
 	//close connection
 	defer conn.Close()
-
-	status := getPowerStatus(conn)
-	if status != "ON" {
-		return "", "", "", nerr.Create("Cannot turn device on", "")
-	}
-	log.L.Infof("Power status: %s", status)
 
 	ipaddr, err := getIPAddress(address, conn)
 	if err != nil {
@@ -126,20 +115,21 @@ func getMacAddress(address string, conn *net.TCPConn) (string, *nerr.E) {
 	return macaddr, nil
 }
 
-//check to make sure that the device is awake
-func getPowerStatus(conn *net.TCPConn) string {
-	conn.Write([]byte("PWSTA\r\n"))
-	b, _ := readUntil(CARRIAGE_RETURN, conn, 10)
-	status := ""
-	log.L.Infof("Response: %s", b)
-	test := strings.Split(fmt.Sprintf("%s", b), "PW")
-	log.L.Infof("Split: %s", test[1])
+//check to make sure that the device is awake (is no longer needed,
+//but will keep in case needed for the future)
+// func getPowerStatus(conn *net.TCPConn) string {
+// 	conn.Write([]byte("PWSTA\r\n"))
+// 	b, _ := readUntil(CARRIAGE_RETURN, conn, 10)
+// 	status := ""
+// 	log.L.Infof("Response: %s", b)
+// 	test := strings.Split(fmt.Sprintf("%s", b), "PW")
+// 	log.L.Infof("Split: %s", test[1])
 
-	if test[1] != "ON" {
-		conn.Write([]byte("PWON\r\n"))
-		status = "ON"
-	} else {
-		status = "ON"
-	}
-	return status
-}
+// 	if test[1] != "ON" {
+// 		conn.Write([]byte("PWON\r\n"))
+// 		status = "ON"
+// 	} else {
+// 		status = "ON"
+// 	}
+// 	return status
+// }
