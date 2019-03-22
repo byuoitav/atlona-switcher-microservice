@@ -114,22 +114,3 @@ func getMacAddress(address string, conn *net.TCPConn) (string, *nerr.E) {
 	log.L.Infof("macaddress: %s", macaddr)
 	return macaddr, nil
 }
-
-//check to make sure that the device is awake (is no longer needed,
-//but will keep in case needed for the future)
-// func getPowerStatus(conn *net.TCPConn) string {
-// 	conn.Write([]byte("PWSTA\r\n"))
-// 	b, _ := readUntil(CARRIAGE_RETURN, conn, 10)
-// 	status := ""
-// 	log.L.Infof("Response: %s", b)
-// 	test := strings.Split(fmt.Sprintf("%s", b), "PW")
-// 	log.L.Infof("Split: %s", test[1])
-
-// 	if test[1] != "ON" {
-// 		conn.Write([]byte("PWON\r\n"))
-// 		status = "ON"
-// 	} else {
-// 		status = "ON"
-// 	}
-// 	return status
-// }

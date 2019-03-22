@@ -14,11 +14,11 @@ import (
 func SwitchInput(address, ouput, input string) (string, *nerr.E) {
 	//establish telnet connection to device
 	conn, err := getConnection(address, true)
-
 	if err != nil {
 		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
 		return "", nerr.Translate(err).Add("Telnet connection failed")
 	}
+	defer conn.Close()
 
 	//execute telnet command to switch input
 	conn.Write([]byte("x" + input + "AVx" + ouput + "\r\n"))
@@ -34,6 +34,5 @@ func SwitchInput(address, ouput, input string) (string, *nerr.E) {
 	response := strings.Split(fmt.Sprintf("%s", b), "AV")
 	test := strings.Split(fmt.Sprintf("%s", response), "x")
 	log.L.Infof("test: %s", test)
-	defer conn.Close()
 	return fmt.Sprintf("%s", input), nil
 }

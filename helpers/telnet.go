@@ -70,7 +70,6 @@ func charInBuffer(toCheck byte, buffer []byte) bool {
 }
 
 func getConnection(address string, readWelcome bool) (*net.TCPConn, error) {
-
 	addr, err := net.ResolveTCPAddr("tcp", address+":23")
 	if err != nil {
 		return nil, err
