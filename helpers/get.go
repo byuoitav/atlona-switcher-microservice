@@ -3,6 +3,7 @@ package helpers
 import (
 	"fmt"
 	"net"
+	"regexp"
 	"strings"
 	"time"
 
@@ -12,6 +13,13 @@ import (
 )
 
 var pool = pooled.NewMap(30*time.Second, getConnection)
+
+var responseRE = `x(\d)AVx(\d)`
+var re *regexp.Regexp
+
+func init() {
+	re = regexp.MustCompile(responseRE)
+}
 
 //GetOutput This function returns the current input that is being shown as the output
 func GetOutput(address string) (string, string, *nerr.E) {
@@ -24,19 +32,17 @@ func GetOutput(address string) (string, string, *nerr.E) {
 			return nerr.Translate(err).Add("failed to read from connection")
 		}
 
-		log.L.Infof("Get status returned %s", b);
+		log.L.Infof("Get status returned %s", b)
 
-		response := strings.Split(fmt.Sprintf("%s", b), "AV")
-		//log.L.Infof("response: '%s'", response[0])
-		//log.L.Infof("response: '%s'", response[1])
+		match := re.FindStringSubmatch(string(b))
 
-		input := string(response[0])
-		input = input[len(input)-1:]
-		output := string(response[1])
-		output = output[1:]
+		if len(match) == 0 {
+			log.L.Errorf("Invalid status response returned")
+			return fmt.Errorf("Invalid status returned")
+		}
 
-		//log.L.Infof("input: '%s'", input)
-		//log.L.Infof("output: '%s'", output)
+		input = match[1]
+		output = match[2]
 
 		return nil
 	}
