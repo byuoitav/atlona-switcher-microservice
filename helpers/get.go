@@ -44,6 +44,8 @@ func GetOutput(address string) (string, string, *nerr.E) {
 		input = match[1]
 		output = match[2]
 
+		log.L.Infof("Parsed response of %s, input %s, Output %s", b, input, output)
+
 		return nil
 	}
 
