@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"bufio"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -30,43 +31,15 @@ func init() {
 func readUntil(delimeter byte, conn net.Conn, timeoutInSeconds int) ([]byte, error) {
 	conn.SetReadDeadline(time.Now().Add(time.Duration(int64(timeoutInSeconds)) * time.Second))
 
-	buffer := make([]byte, 128)
-	message := []byte{}
+	reader := bufio.NewReader(conn)
+	b, err := reader.ReadBytes(delimeter)
 
-	for !charInBuffer(delimeter, buffer) {
-		_, err := conn.Read(buffer)
-		if err != nil {
-			err = errors.New(fmt.Sprintf("Error reading response: %s", err.Error()))
-			log.L.Infof("%s", err.Error())
-			return message, err
-		}
-
-		message = append(message, buffer...)
+	if err != nil {
+		err = errors.New(fmt.Sprintf("Error reading response: %s", err.Error()))
+		log.L.Infof("%s", err.Error())
+		return []byte{}, err
 	}
-
-	return removeNil(message), nil
-}
-
-func removeNil(b []byte) (ret []byte) {
-	for _, c := range b {
-		switch c {
-		case '\x00':
-			break
-		default:
-			ret = append(ret, c)
-		}
-	}
-	return ret
-}
-
-func charInBuffer(toCheck byte, buffer []byte) bool {
-	for _, b := range buffer {
-		if toCheck == b {
-			return true
-		}
-	}
-
-	return false
+	return b, nil
 }
 
 func getConnection(key interface{}) (net.Conn, error) {
