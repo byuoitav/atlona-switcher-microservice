@@ -27,7 +27,7 @@ func init() {
 	tlsConfig = &tls.Config{}
 }
 
-func readUntil(delimeter byte, conn *net.TCPConn, timeoutInSeconds int) ([]byte, error) {
+func readUntil(delimeter byte, conn net.Conn, timeoutInSeconds int) ([]byte, error) {
 	conn.SetReadDeadline(time.Now().Add(time.Duration(int64(timeoutInSeconds)) * time.Second))
 
 	buffer := make([]byte, 128)
@@ -69,7 +69,12 @@ func charInBuffer(toCheck byte, buffer []byte) bool {
 	return false
 }
 
-func getConnection(address string, readWelcome bool) (*net.TCPConn, error) {
+func getConnection(key interface{}) (net.Conn, error) {
+	address, ok := key.(string)
+	if !ok {
+		return nil, fmt.Errorf("key must be a string")
+	}
+
 	addr, err := net.ResolveTCPAddr("tcp", address+":23")
 	if err != nil {
 		return nil, err
@@ -80,14 +85,13 @@ func getConnection(address string, readWelcome bool) (*net.TCPConn, error) {
 		return nil, err
 	}
 
-	if readWelcome {
-		color.Set(color.FgMagenta)
-		log.L.Infof("Reading welcome message")
-		color.Unset()
-		_, err := readUntil(CARRIAGE_RETURN, conn, 3)
-		if err != nil {
-			return conn, err
-		}
+	color.Set(color.FgMagenta)
+	log.L.Infof("Reading welcome message")
+	color.Unset()
+
+	_, err = readUntil(CARRIAGE_RETURN, conn, 3)
+	if err != nil {
+		return conn, err
 	}
 
 	return conn, err

@@ -4,76 +4,86 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/nerr"
+	"github.com/byuoitav/common/pooled"
 )
+
+var pool = pooled.NewMap(30*time.Second, getConnection)
 
 //This function returns the current input that is being shown as the output
 func GetOutput(address string) (string, string, *nerr.E) {
-	conn, err := getConnection(address, true)
-	if err != nil {
-		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
-		return "", "", nerr.Translate(err).Add("Telnet connection failed")
+	var input, output string
+
+	work := func(conn net.Conn) error {
+		conn.Write([]byte(fmt.Sprintf("Status\r\n")))
+		b, err := readUntil(CARRIAGE_RETURN, conn, 10)
+		if err != nil {
+			return nerr.Translate(err).Add("failed to read from connection")
+		}
+
+		response := strings.Split(fmt.Sprintf("%s", b), "AV")
+		log.L.Infof("response: '%s'", response[0])
+		log.L.Infof("response: '%s'", response[1])
+
+		input := string(response[0])
+		input = input[len(input)-1:]
+		output := string(response[1])
+		output = output[1:]
+
+		log.L.Infof("input: '%s'", input)
+		log.L.Infof("output: '%s'", output)
+
+		return nil
 	}
-	//close connection
-	defer conn.Close()
 
-	conn.Write([]byte(fmt.Sprintf("Status\r\n")))
-	b, err := readUntil(CARRIAGE_RETURN, conn, 10)
+	err := pool.Do(address, work)
 	if err != nil {
-		return "", "", nerr.Translate(err).Add("failed to read from connection")
+		return "", "", nerr.Translate(err)
 	}
 
-	response := strings.Split(fmt.Sprintf("%s", b), "AV")
-
-	log.L.Infof("response: '%s'", response[0])
-	log.L.Infof("response: '%s'", response[1])
-	input := string(response[0])
-	input = input[len(input)-1:]
-	output := string(response[1])
-	output = output[1:]
-
-	log.L.Infof("input: '%s'", input)
-	log.L.Infof("output: '%s'", output)
-
-	return fmt.Sprintf("%s", input), fmt.Sprintf("%s", output), nil
+	return input, output, nil
 }
 
 //This function gets the IP Address (ipaddr), Software and hardware
 //version (verdata), and mac address (macaddr) of the device
 func GetHardware(address string) (string, string, string, *nerr.E) {
-	conn, gerr := getConnection(address, true)
-	if gerr != nil {
-		log.L.Errorf("Failed to get connection with %s: %s", address, gerr.Error())
-		return "", "", "", nerr.Translate(gerr).Add("Telnet connection failed")
-	}
-	//close connection
-	defer conn.Close()
+	var ipaddr, verdata, macaddr string
 
-	ipaddr, err := getIPAddress(address, conn)
+	work := func(conn net.Conn) error {
+		var err error
+		ipaddr, err = getIPAddress(address, conn)
+		if err != nil {
+			log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
+			return err
+		}
+
+		verdata, err = getVerData(address, conn)
+		if err != nil {
+			log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
+			return err
+		}
+
+		macaddr, err = getMacAddress(address, conn)
+		if err != nil {
+			log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
+			return err
+		}
+
+		return nil
+	}
+
+	err := pool.Do(address, work)
 	if err != nil {
-		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
-		return "", "", "", err.Add("Telnet connection failed")
+		return "", "", "", nerr.Translate(err)
 	}
 
-	verdata, err := getVerData(address, conn)
-	if err != nil {
-		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
-		return "", "", "", err.Add("Telnet connection failed")
-	}
-
-	macaddr, err := getMacAddress(address, conn)
-	if err != nil {
-		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
-		return "", "", "", err.Add("Telnet connection failed")
-	}
-
-	conn.Close()
 	return ipaddr, macaddr, verdata, nil
 }
 
-func getIPAddress(address string, conn *net.TCPConn) (string, *nerr.E) {
+func getIPAddress(address string, conn net.Conn) (string, *nerr.E) {
 	conn.Write([]byte("IPCFG\r\n"))
 	b, err := readUntil(LINE_FEED, conn, 10)
 	if err != nil {
@@ -87,7 +97,7 @@ func getIPAddress(address string, conn *net.TCPConn) (string, *nerr.E) {
 }
 
 //gets software and hardware data
-func getVerData(address string, conn *net.TCPConn) (string, *nerr.E) {
+func getVerData(address string, conn net.Conn) (string, *nerr.E) {
 	conn.Write([]byte("Version\r\n"))
 	log.L.Info("Just wrote the command for version")
 	b, err := readUntil(LINE_FEED, conn, 10)
@@ -102,7 +112,7 @@ func getVerData(address string, conn *net.TCPConn) (string, *nerr.E) {
 }
 
 //gets macaddress of device
-func getMacAddress(address string, conn *net.TCPConn) (string, *nerr.E) {
+func getMacAddress(address string, conn net.Conn) (string, *nerr.E) {
 	conn.Write([]byte("RAtlMac\r\n"))
 	b, err := readUntil(CARRIAGE_RETURN, conn, 10)
 	if err != nil {
