@@ -24,9 +24,11 @@ func SwitchInput(address, ouput, input string) (string, *nerr.E) {
 			return fmt.Errorf("Input or Output is out of range")
 		}
 
-		response := strings.Split(fmt.Sprintf("%s", b), "AV")
-		test := strings.Split(fmt.Sprintf("%s", response), "x")
-		log.L.Infof("test: %s", test)
+		log.L.Infof("Set input to %s returned %s", input, b)
+
+		//response := strings.Split(fmt.Sprintf("%s", b), "AV")
+		//test := strings.Split(fmt.Sprintf("%s", response), "x")
+		//log.L.Infof("test: %s", test)
 
 		return nil
 	}

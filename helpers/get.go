@@ -13,7 +13,7 @@ import (
 
 var pool = pooled.NewMap(30*time.Second, getConnection)
 
-//This function returns the current input that is being shown as the output
+//GetOutput This function returns the current input that is being shown as the output
 func GetOutput(address string) (string, string, *nerr.E) {
 	var input, output string
 
@@ -24,17 +24,19 @@ func GetOutput(address string) (string, string, *nerr.E) {
 			return nerr.Translate(err).Add("failed to read from connection")
 		}
 
+		log.L.Infof("Get status returned %s", b);
+
 		response := strings.Split(fmt.Sprintf("%s", b), "AV")
-		log.L.Infof("response: '%s'", response[0])
-		log.L.Infof("response: '%s'", response[1])
+		//log.L.Infof("response: '%s'", response[0])
+		//log.L.Infof("response: '%s'", response[1])
 
 		input := string(response[0])
 		input = input[len(input)-1:]
 		output := string(response[1])
 		output = output[1:]
 
-		log.L.Infof("input: '%s'", input)
-		log.L.Infof("output: '%s'", output)
+		//log.L.Infof("input: '%s'", input)
+		//log.L.Infof("output: '%s'", output)
 
 		return nil
 	}
@@ -47,7 +49,7 @@ func GetOutput(address string) (string, string, *nerr.E) {
 	return input, output, nil
 }
 
-//This function gets the IP Address (ipaddr), Software and hardware
+//GetHardware This function gets the IP Address (ipaddr), Software and hardware
 //version (verdata), and mac address (macaddr) of the device
 func GetHardware(address string) (string, string, string, *nerr.E) {
 	var ipaddr, verdata, macaddr string
