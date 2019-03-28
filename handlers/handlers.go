@@ -52,6 +52,7 @@ func ShowOutput(context echo.Context) error {
 	input = input - 1
 	log.L.Infof("input: %d", input)
 	output, _ := strconv.Atoi(outport)
+	output--
 	log.L.Infof("ouput: %d", output)
 
 	return context.JSON(http.StatusOK, status.Input{Input: fmt.Sprintf("%v:%v", input, output)})
