@@ -32,9 +32,10 @@ func GetOutput(address string) (string, string, *nerr.E) {
 			return nerr.Translate(err).Add("failed to read from connection")
 		}
 
-		log.L.Infof("Get status returned %s", b)
+		responseStr := strings.TrimSpace(string(b))
+		log.L.Infof("Get status returned %s", responseStr)
 
-		match := re.FindStringSubmatch(string(b))
+		match := re.FindStringSubmatch(responseStr)
 
 		if len(match) == 0 {
 			log.L.Errorf("Invalid status response returned")
@@ -44,7 +45,7 @@ func GetOutput(address string) (string, string, *nerr.E) {
 		input = match[1]
 		output = match[2]
 
-		log.L.Infof("Parsed response of %s, input %s, Output %s", b, input, output)
+		log.L.Infof("Parsed response of %s, input %s, Output %s", responseStr, input, output)
 
 		return nil
 	}
