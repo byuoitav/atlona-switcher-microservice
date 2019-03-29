@@ -15,7 +15,7 @@ func SwitchInput(address, ouput, input string) (string, *nerr.E) {
 	work := func(conn net.Conn) error {
 		//execute telnet command to switch input
 		conn.Write([]byte("x" + input + "AVx" + ouput + "\r\n"))
-		b, err := readUntil(CARRIAGE_RETURN, conn, 10)
+		b, err := readUntil(LF, conn, 10)
 		if err != nil {
 			return err
 		}
@@ -25,10 +25,6 @@ func SwitchInput(address, ouput, input string) (string, *nerr.E) {
 		}
 
 		log.L.Infof("Set input to %s returned %s", input, b)
-
-		//response := strings.Split(fmt.Sprintf("%s", b), "AV")
-		//test := strings.Split(fmt.Sprintf("%s", response), "x")
-		//log.L.Infof("test: %s", test)
 
 		return nil
 	}
