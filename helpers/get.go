@@ -25,13 +25,11 @@ func GetOutput(address string) (string, string, *nerr.E) {
 	var input, output string
 
 	work := func(conn pooled.Conn) error {
-		conn.ReadWriter().Write([]byte(fmt.Sprintf("Status\r")))
+		conn.Write([]byte(fmt.Sprintf("Status\r")))
 		b, err := readUntil(LF, conn, 10)
 		if err != nil {
 			return nerr.Translate(err).Add("failed to read from connection")
 		}
-
-		log.L.Debugf("raw response: %s", b)
 
 		responseStr := strings.TrimSpace(string(b))
 		log.L.Infof("Get status returned %s", responseStr)
@@ -39,7 +37,7 @@ func GetOutput(address string) (string, string, *nerr.E) {
 		match := re.FindStringSubmatch(responseStr)
 
 		if len(match) == 0 {
-			return fmt.Errorf("Invalid status returned")
+			return fmt.Errorf("Invalid status returned (got: 0x%x)", b)
 		}
 
 		input = match[1]
@@ -95,7 +93,7 @@ func GetHardware(address string) (string, string, string, *nerr.E) {
 }
 
 func getIPAddress(address string, conn pooled.Conn) (string, *nerr.E) {
-	conn.ReadWriter().Write([]byte("IPCFG\r\n"))
+	conn.Write([]byte("IPCFG\r\n"))
 	b, err := readUntil(LF, conn, 10)
 	if err != nil {
 		return "", nerr.Translate(err).Add("failed to read IP address from connection")
@@ -109,7 +107,7 @@ func getIPAddress(address string, conn pooled.Conn) (string, *nerr.E) {
 
 //gets software and hardware data
 func getVerData(address string, conn pooled.Conn) (string, *nerr.E) {
-	conn.ReadWriter().Write([]byte("Version\r\n"))
+	conn.Write([]byte("Version\r\n"))
 	log.L.Info("Just wrote the command for version")
 	b, err := readUntil(LF, conn, 10)
 	if err != nil {
@@ -124,7 +122,7 @@ func getVerData(address string, conn pooled.Conn) (string, *nerr.E) {
 
 //gets macaddress of device
 func getMacAddress(address string, conn pooled.Conn) (string, *nerr.E) {
-	conn.ReadWriter().Write([]byte("RAtlMac\r\n"))
+	conn.Write([]byte("RAtlMac\r\n"))
 	b, err := readUntil(LF, conn, 10)
 	if err != nil {
 		return "", nerr.Translate(err).Add("failed to read Mac Address from connection")

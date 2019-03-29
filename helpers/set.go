@@ -14,7 +14,7 @@ import (
 func SwitchInput(address, ouput, input string) (string, *nerr.E) {
 	work := func(conn pooled.Conn) error {
 		//execute telnet command to switch input
-		conn.ReadWriter().Write([]byte("x" + input + "AVx" + ouput + "\r\n"))
+		conn.Write([]byte("x" + input + "AVx" + ouput + "\r\n"))
 		b, err := readUntil(LF, conn, 10)
 		if err != nil {
 			return err

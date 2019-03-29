@@ -60,5 +60,7 @@ func getConnection(key interface{}) (pooled.Conn, error) {
 		return nil, err
 	}
 
+	time.Sleep(750 * time.Millisecond) // time for the switcher to chill out
+
 	return pconn, err
 }
