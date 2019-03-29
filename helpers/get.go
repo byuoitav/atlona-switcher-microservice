@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"fmt"
-	"net"
 	"regexp"
 	"strings"
 	"time"
@@ -25,8 +24,8 @@ func init() {
 func GetOutput(address string) (string, string, *nerr.E) {
 	var input, output string
 
-	work := func(conn net.Conn) error {
-		conn.Write([]byte(fmt.Sprintf("Status\r")))
+	work := func(conn pooled.Conn) error {
+		conn.ReadWriter().Write([]byte(fmt.Sprintf("Status\r")))
 		b, err := readUntil(LF, conn, 10)
 		if err != nil {
 			return nerr.Translate(err).Add("failed to read from connection")
@@ -64,7 +63,7 @@ func GetOutput(address string) (string, string, *nerr.E) {
 func GetHardware(address string) (string, string, string, *nerr.E) {
 	var ipaddr, verdata, macaddr string
 
-	work := func(conn net.Conn) error {
+	work := func(conn pooled.Conn) error {
 		var err error
 		ipaddr, err = getIPAddress(address, conn)
 		if err != nil {
@@ -95,8 +94,8 @@ func GetHardware(address string) (string, string, string, *nerr.E) {
 	return ipaddr, macaddr, verdata, nil
 }
 
-func getIPAddress(address string, conn net.Conn) (string, *nerr.E) {
-	conn.Write([]byte("IPCFG\r\n"))
+func getIPAddress(address string, conn pooled.Conn) (string, *nerr.E) {
+	conn.ReadWriter().Write([]byte("IPCFG\r\n"))
 	b, err := readUntil(LF, conn, 10)
 	if err != nil {
 		return "", nerr.Translate(err).Add("failed to read IP address from connection")
@@ -109,8 +108,8 @@ func getIPAddress(address string, conn net.Conn) (string, *nerr.E) {
 }
 
 //gets software and hardware data
-func getVerData(address string, conn net.Conn) (string, *nerr.E) {
-	conn.Write([]byte("Version\r\n"))
+func getVerData(address string, conn pooled.Conn) (string, *nerr.E) {
+	conn.ReadWriter().Write([]byte("Version\r\n"))
 	log.L.Info("Just wrote the command for version")
 	b, err := readUntil(LF, conn, 10)
 	if err != nil {
@@ -124,8 +123,8 @@ func getVerData(address string, conn net.Conn) (string, *nerr.E) {
 }
 
 //gets macaddress of device
-func getMacAddress(address string, conn net.Conn) (string, *nerr.E) {
-	conn.Write([]byte("RAtlMac\r\n"))
+func getMacAddress(address string, conn pooled.Conn) (string, *nerr.E) {
+	conn.ReadWriter().Write([]byte("RAtlMac\r\n"))
 	b, err := readUntil(LF, conn, 10)
 	if err != nil {
 		return "", nerr.Translate(err).Add("failed to read Mac Address from connection")
