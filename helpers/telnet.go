@@ -1,15 +1,12 @@
 package helpers
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net"
 	"time"
 
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/pooled"
-
-	telnet "github.com/reiver/go-telnet"
 )
 
 const (
@@ -18,13 +15,6 @@ const (
 	// LF is a line feed
 	LF = '\n'
 )
-
-var tlsConfig *tls.Config
-var caller telnet.Caller
-
-func init() {
-	tlsConfig = &tls.Config{}
-}
 
 func readUntil(delimeter byte, conn pooled.Conn, timeoutInSeconds int) ([]byte, error) {
 	conn.SetReadDeadline(time.Now().Add(time.Duration(int64(timeoutInSeconds)) * time.Second))
