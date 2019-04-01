@@ -21,7 +21,6 @@ func readUntil(delimeter byte, conn pooled.Conn, timeoutInSeconds int) ([]byte, 
 
 	b, err := conn.ReadWriter().ReadBytes(delimeter)
 	if err != nil {
-		err = fmt.Errorf("Error reading response: %s", err.Error())
 		return []byte{}, err
 	}
 
@@ -45,7 +44,6 @@ func getConnection(key interface{}) (pooled.Conn, error) {
 	}
 
 	pconn := pooled.Wrap(conn)
-
 	log.L.Infof("Reading welcome message")
 
 	// read first new line
@@ -61,6 +59,5 @@ func getConnection(key interface{}) (pooled.Conn, error) {
 	}
 
 	time.Sleep(750 * time.Millisecond) // time for the switcher to chill out
-
-	return pconn, err
+	return pconn, nil
 }

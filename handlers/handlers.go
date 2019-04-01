@@ -14,6 +14,8 @@ import (
 
 //TODO create global variable for last time the power was reset
 //Have each function check the time to see if it needs to be reset again
+
+// SwitchInput .
 func SwitchInput(context echo.Context) error {
 	output := context.Param("output")
 
@@ -29,7 +31,7 @@ func SwitchInput(context echo.Context) error {
 
 	resp, err := helpers.SwitchInput(address, fmt.Sprintf("%v", outport), fmt.Sprintf("%v", inport))
 	if err != nil {
-		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
+		log.L.Errorf("failed to switch input on %s: %s", address, err)
 		return context.JSON(http.StatusInternalServerError, err)
 	}
 
@@ -40,14 +42,16 @@ func SwitchInput(context echo.Context) error {
 	return context.JSON(http.StatusOK, status.Input{Input: fmt.Sprintf("%v:%v", input, output)})
 }
 
+// ShowOutput .
 func ShowOutput(context echo.Context) error {
 	address := context.Param("address")
 
 	inport, outport, err := helpers.GetOutput(address)
 	if err != nil {
-		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
+		log.L.Errorf("failed to get output on %s: %s", address, err)
 		return context.JSON(http.StatusInternalServerError, err)
 	}
+
 	input, _ := strconv.Atoi(inport)
 	input = input - 1
 	log.L.Infof("input: %d", input)
@@ -58,13 +62,16 @@ func ShowOutput(context echo.Context) error {
 	return context.JSON(http.StatusOK, status.Input{Input: fmt.Sprintf("%v:%v", input, output)})
 }
 
+// HardwareInfo .
 func HardwareInfo(context echo.Context) error {
 	address := context.Param("address")
+
 	ipaddr, macaddr, verdata, err := helpers.GetHardware(address)
 	if err != nil {
-		log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
+		log.L.Errorf("failed to get hardware info from %s: %s", address, err)
 		return context.JSON(http.StatusInternalServerError, err)
 	}
+
 	return context.JSON(http.StatusOK, structs.HardwareInfo{
 		NetworkInfo: structs.NetworkInfo{
 			IPAddress:  ipaddr,

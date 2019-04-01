@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/byuoitav/common/log"
-	"github.com/byuoitav/common/nerr"
 	"github.com/byuoitav/common/pooled"
 )
 
@@ -21,21 +20,21 @@ func init() {
 }
 
 //GetOutput This function returns the current input that is being shown as the output
-func GetOutput(address string) (string, string, *nerr.E) {
+func GetOutput(address string) (string, string, error) {
 	var input, output string
 
 	work := func(conn pooled.Conn) error {
 		conn.Write([]byte(fmt.Sprintf("Status\r")))
+
 		b, err := readUntil(LF, conn, 10)
 		if err != nil {
-			return nerr.Translate(err).Add("failed to read from connection")
+			return err
 		}
 
 		responseStr := strings.TrimSpace(string(b))
 		log.L.Infof("Get status returned %s", responseStr)
 
 		match := re.FindStringSubmatch(responseStr)
-
 		if len(match) == 0 {
 			return fmt.Errorf("Invalid status returned (got: 0x%x)", b)
 		}
@@ -44,13 +43,12 @@ func GetOutput(address string) (string, string, *nerr.E) {
 		output = match[2]
 
 		log.L.Infof("Parsed response of %s, input %s, Output %s", responseStr, input, output)
-
 		return nil
 	}
 
 	err := pool.Do(address, work)
 	if err != nil {
-		return "", "", nerr.Translate(err)
+		return "", "", fmt.Errorf("failed to get output: %s", err)
 	}
 
 	return input, output, nil
@@ -58,26 +56,24 @@ func GetOutput(address string) (string, string, *nerr.E) {
 
 //GetHardware This function gets the IP Address (ipaddr), Software and hardware
 //version (verdata), and mac address (macaddr) of the device
-func GetHardware(address string) (string, string, string, *nerr.E) {
+func GetHardware(address string) (string, string, string, error) {
 	var ipaddr, verdata, macaddr string
 
 	work := func(conn pooled.Conn) error {
 		var err error
+
 		ipaddr, err = getIPAddress(address, conn)
 		if err != nil {
-			log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
 			return err
 		}
 
 		verdata, err = getVerData(address, conn)
 		if err != nil {
-			log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
 			return err
 		}
 
 		macaddr, err = getMacAddress(address, conn)
 		if err != nil {
-			log.L.Errorf("Failed to establish connection with %s : %s", address, err.Error())
 			return err
 		}
 
@@ -86,33 +82,37 @@ func GetHardware(address string) (string, string, string, *nerr.E) {
 
 	err := pool.Do(address, work)
 	if err != nil {
-		return "", "", "", nerr.Translate(err)
+		return "", "", "", fmt.Errorf("failed to get hardware info: %s", err)
 	}
 
 	return ipaddr, macaddr, verdata, nil
 }
 
-func getIPAddress(address string, conn pooled.Conn) (string, *nerr.E) {
+func getIPAddress(address string, conn pooled.Conn) (string, error) {
 	conn.Write([]byte("IPCFG\r\n"))
+
 	b, err := readUntil(LF, conn, 10)
 	if err != nil {
-		return "", nerr.Translate(err).Add("failed to read IP address from connection")
+		return "", fmt.Errorf("failed to get ip address: %s", err)
 	}
+
 	response := strings.Split(string(b), "IP Addr: ")
 	ipaddr := strings.Split(response[1], "Netmask")
 	ipaddr[0] = strings.TrimSpace(ipaddr[0])
 	log.L.Infof("IP address: %s", ipaddr[0])
+
 	return ipaddr[0], nil
 }
 
 //gets software and hardware data
-func getVerData(address string, conn pooled.Conn) (string, *nerr.E) {
+func getVerData(address string, conn pooled.Conn) (string, error) {
 	conn.Write([]byte("Version\r\n"))
-	log.L.Info("Just wrote the command for version")
+
 	b, err := readUntil(LF, conn, 10)
 	if err != nil {
-		return "", nerr.Translate(err).Add("failed to read VerData from connection")
+		return "", fmt.Errorf("failed to get ver data: %s", err)
 	}
+
 	verdata := fmt.Sprintf("%s", b)
 	verdata = strings.TrimSpace(verdata)
 
@@ -121,12 +121,14 @@ func getVerData(address string, conn pooled.Conn) (string, *nerr.E) {
 }
 
 //gets macaddress of device
-func getMacAddress(address string, conn pooled.Conn) (string, *nerr.E) {
+func getMacAddress(address string, conn pooled.Conn) (string, error) {
 	conn.Write([]byte("RAtlMac\r\n"))
+
 	b, err := readUntil(LF, conn, 10)
 	if err != nil {
-		return "", nerr.Translate(err).Add("failed to read Mac Address from connection")
+		return "", fmt.Errorf("failed to get mac address: %s", err)
 	}
+
 	macaddr := fmt.Sprintf("%s", b)
 	macaddr = strings.TrimSpace(macaddr)
 
