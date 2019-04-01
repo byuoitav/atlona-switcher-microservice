@@ -60,25 +60,5 @@ func getConnection(key interface{}) (pooled.Conn, error) {
 
 	time.Sleep(750 * time.Millisecond) // time for the switcher to chill out
 
-	/*
-		// don't broadcast our messages
-		_, err = pconn.Write([]byte("Broadcast off"))
-		if err != nil {
-			return nil, err
-		}
-
-		log.L.Infof("Sent 'Broadcast off' message")
-		b, err := readUntil(LF, pconn, 20)
-		if err != nil {
-			return nil, err
-		}
-		log.L.Infof("Received '%s' message", string(b))
-
-		resp := strings.TrimSpace(string(b))
-		if !strings.EqualFold(resp, "Broadcast off") {
-			return nil, fmt.Errorf("unable to disable broadcasting messages")
-		}
-	*/
-
 	return pconn, nil
 }
