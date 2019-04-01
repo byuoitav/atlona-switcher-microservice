@@ -96,12 +96,35 @@ func getIPAddress(address string, conn pooled.Conn) (string, error) {
 		return "", fmt.Errorf("failed to get ip address: %s", err)
 	}
 
-	response := strings.Split(string(b), "IP Addr: ")
-	ipaddr := strings.Split(response[1], "Netmask")
-	ipaddr[0] = strings.TrimSpace(ipaddr[0])
-	log.L.Infof("IP address: %s", ipaddr[0])
+	resp := strings.TrimSpace(string(b))
+	split := strings.Split(resp, ":")
 
-	return ipaddr[0], nil
+	if len(split) != 2 {
+		return "", fmt.Errorf("invalid response getting ip address. response: 0x%x", b)
+	}
+
+	// read the other responses out
+	b, err = readUntil(LF, conn, 5) // netmask
+	if err != nil {
+		return "", fmt.Errorf("invalid response getting ip address. netmask line: 0x%x", b)
+	}
+
+	b, err = readUntil(LF, conn, 5) // gateway
+	if err != nil {
+		return "", fmt.Errorf("invalid response getting ip address. gateway line: 0x%x", b)
+	}
+
+	b, err = readUntil(LF, conn, 5) // telnet port
+	if err != nil {
+		return "", fmt.Errorf("invalid response getting ip address. telnet port line: 0x%x", b)
+	}
+
+	b, err = readUntil(LF, conn, 5) // http port
+	if err != nil {
+		return "", fmt.Errorf("invalid response getting ip address. http port line: 0x%x", b)
+	}
+
+	return strings.TrimSpace(split[1]), nil
 }
 
 //gets software and hardware data
