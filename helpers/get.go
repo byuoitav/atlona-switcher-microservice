@@ -10,7 +10,7 @@ import (
 	"github.com/byuoitav/common/pooled"
 )
 
-var pool = pooled.NewMap(30*time.Second, getConnection)
+var pool = pooled.NewMap(120*time.Second, getConnection)
 
 var responseRE = `x(\d)AVx(\d)`
 var re *regexp.Regexp
