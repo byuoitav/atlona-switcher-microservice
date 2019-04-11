@@ -24,7 +24,7 @@ func GetOutput(address string) (string, string, error) {
 	var input, output string
 
 	work := func(conn pooled.Conn) error {
-		conn.Write([]byte(fmt.Sprintf("Status\r")))
+		conn.Write([]byte(fmt.Sprintf("Status\r\n")))
 
 		b, err := readUntil(LF, conn, 10)
 		if err != nil {

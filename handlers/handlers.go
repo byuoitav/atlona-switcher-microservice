@@ -45,7 +45,6 @@ func SwitchInput(context echo.Context) error {
 // ShowOutput .
 func ShowOutput(context echo.Context) error {
 	address := context.Param("address")
-
 	inport, outport, err := helpers.GetOutput(address)
 	if err != nil {
 		log.L.Errorf("failed to get output on %s: %s", address, err)
