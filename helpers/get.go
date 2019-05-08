@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/pooled"
 )
 
@@ -24,16 +23,25 @@ func GetOutput(address string) (string, string, error) {
 	var input, output string
 
 	work := func(conn pooled.Conn) error {
-		conn.Write([]byte(fmt.Sprintf("Status\r\n")))
+		conn.Log().Infof("Getting the current output")
 
-		b, err := readUntil(LF, conn, 10)
+		cmd := []byte(fmt.Sprintf("Status\r"))
+		n, err := conn.Write(cmd)
+		switch {
+		case err != nil:
+			return err
+		case n != len(cmd):
+			return fmt.Errorf("wrote %v/%v bytes of command 0x%x", n, len(cmd), cmd)
+		}
+
+		b, err := conn.ReadUntil(LF, 10*time.Second)
 		if err != nil {
 			return err
 		}
 
-		responseStr := strings.TrimSpace(string(b))
-		log.L.Infof("Get status returned %s", responseStr)
+		conn.Log().Debugf("Response from command: 0x%x", b)
 
+		responseStr := strings.TrimSpace(string(b))
 		match := re.FindStringSubmatch(responseStr)
 		if len(match) == 0 {
 			return fmt.Errorf("Invalid status returned (got: 0x%x)", b)
@@ -42,7 +50,7 @@ func GetOutput(address string) (string, string, error) {
 		input = match[1]
 		output = match[2]
 
-		log.L.Infof("Parsed response of %s, input %s, Output %s", responseStr, input, output)
+		conn.Log().Infof("Current output (port %s) is %s", output, input)
 		return nil
 	}
 
@@ -60,12 +68,8 @@ func GetHardware(address string) (string, string, string, error) {
 	var ipaddr, verdata, macaddr string
 
 	work := func(conn pooled.Conn) error {
+		conn.Log().Infof("Getting hardware info")
 		var err error
-
-		ipaddr, err = getIPAddress(address, conn)
-		if err != nil {
-			return err
-		}
 
 		verdata, err = getVerData(address, conn)
 		if err != nil {
@@ -73,6 +77,11 @@ func GetHardware(address string) (string, string, string, error) {
 		}
 
 		macaddr, err = getMacAddress(address, conn)
+		if err != nil {
+			return err
+		}
+
+		ipaddr, err = getIPAddress(address, conn)
 		if err != nil {
 			return err
 		}
@@ -89,9 +98,9 @@ func GetHardware(address string) (string, string, string, error) {
 }
 
 func getIPAddress(address string, conn pooled.Conn) (string, error) {
-	conn.Write([]byte("IPCFG\r\n"))
+	conn.Write([]byte("IPCFG\r"))
 
-	b, err := readUntil(LF, conn, 10)
+	b, err := conn.ReadUntil(LF, 10*time.Second)
 	if err != nil {
 		return "", fmt.Errorf("failed to get ip address: %s", err)
 	}
@@ -103,35 +112,15 @@ func getIPAddress(address string, conn pooled.Conn) (string, error) {
 		return "", fmt.Errorf("invalid response getting ip address. response: 0x%x", b)
 	}
 
-	// read the other responses out
-	b, err = readUntil(LF, conn, 5) // netmask
-	if err != nil {
-		return "", fmt.Errorf("invalid response getting ip address. netmask line: 0x%x", b)
-	}
-
-	b, err = readUntil(LF, conn, 5) // gateway
-	if err != nil {
-		return "", fmt.Errorf("invalid response getting ip address. gateway line: 0x%x", b)
-	}
-
-	b, err = readUntil(LF, conn, 5) // telnet port
-	if err != nil {
-		return "", fmt.Errorf("invalid response getting ip address. telnet port line: 0x%x", b)
-	}
-
-	b, err = readUntil(LF, conn, 5) // http port
-	if err != nil {
-		return "", fmt.Errorf("invalid response getting ip address. http port line: 0x%x", b)
-	}
-
+	conn.Log().Infof("IP Address: %s", split[1])
 	return strings.TrimSpace(split[1]), nil
 }
 
 //gets software and hardware data
 func getVerData(address string, conn pooled.Conn) (string, error) {
-	conn.Write([]byte("Version\r\n"))
+	conn.Write([]byte("Version\r"))
 
-	b, err := readUntil(LF, conn, 10)
+	b, err := conn.ReadUntil(LF, 10*time.Second)
 	if err != nil {
 		return "", fmt.Errorf("failed to get ver data: %s", err)
 	}
@@ -139,15 +128,15 @@ func getVerData(address string, conn pooled.Conn) (string, error) {
 	verdata := fmt.Sprintf("%s", b)
 	verdata = strings.TrimSpace(verdata)
 
-	log.L.Infof("version: %s", verdata)
+	conn.Log().Infof("Version: %s", verdata)
 	return verdata, nil
 }
 
 //gets macaddress of device
 func getMacAddress(address string, conn pooled.Conn) (string, error) {
-	conn.Write([]byte("RAtlMac\r\n"))
+	conn.Write([]byte("RAtlMac\r"))
 
-	b, err := readUntil(LF, conn, 10)
+	b, err := conn.ReadUntil(LF, 10*time.Second)
 	if err != nil {
 		return "", fmt.Errorf("failed to get mac address: %s", err)
 	}
@@ -155,6 +144,6 @@ func getMacAddress(address string, conn pooled.Conn) (string, error) {
 	macaddr := fmt.Sprintf("%s", b)
 	macaddr = strings.TrimSpace(macaddr)
 
-	log.L.Infof("macaddress: %s", macaddr)
+	conn.Log().Infof("Macaddress: %s", macaddr)
 	return macaddr, nil
 }
