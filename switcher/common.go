@@ -18,11 +18,11 @@ const (
 
 // AVSettings is the response from the switcher for the av settings page
 type AVSettings struct {
-	HDMIInputAudioBreakout int   `json:"arc"`
+	HDMIInputAudioBreakout int   `json:"ARC"`
 	HDCPSettings           []int `json:"HDCPSet"`
 	AudioOutput            int   `json:"HDMIAud"`
 	Toslink                int   `json:"Toslink"`
-	AutoSwitch             int   `json:"aws"`
+	AutoSwitch             int   `json:"asw"`
 	Input                  int   `json:"inp"`
 	LoggedIn               int   `json:"login_ur"`
 }
