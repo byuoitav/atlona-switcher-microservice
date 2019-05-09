@@ -3,79 +3,69 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/byuoitav/atlona-switcher-microservice/helpers"
+	"github.com/byuoitav/atlona-switcher-microservice/switcher"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/status"
-	"github.com/byuoitav/common/structs"
 	"github.com/labstack/echo"
 )
 
-//TODO create global variable for last time the power was reset
-//Have each function check the time to see if it needs to be reset again
-
 // SwitchInput .
-func SwitchInput(context echo.Context) error {
-	output := context.Param("output")
+func SwitchInput(ectx echo.Context) error {
+	address := ectx.Param("address")
+	output := ectx.Param("output")
+	input := ectx.Param("input")
 
-	outport, _ := strconv.Atoi(output)
-	outport = outport + 1
+	l := log.L.Named(address)
+	l.Infof("Switching input for output %s to %s", output, input)
 
-	input := context.Param("input")
-
-	inport, _ := strconv.Atoi(input)
-	inport = inport + 1
-
-	address := context.Param("address")
-
-	resp, err := helpers.SwitchInput(address, fmt.Sprintf("%v", outport), fmt.Sprintf("%v", inport))
+	err := switcher.SwitchInput(ectx.Request().Context(), address, output, input)
 	if err != nil {
-		log.L.Errorf("failed to switch input on %s: %s", address, err)
-		return context.JSON(http.StatusInternalServerError, err)
+		l.Warnf("%s", err.Error())
+		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	//decrement response by 1
-	response, _ := strconv.Atoi(resp)
-	response = response - 1
-	//in:out
-	return context.JSON(http.StatusOK, status.Input{Input: fmt.Sprintf("%v:%v", input, output)})
+	l.Infof("Successfully changed input for output %s to %s", output, input)
+	return ectx.JSON(http.StatusOK, status.Input{
+		Input: fmt.Sprintf("%v:%v", input, output),
+	})
 }
 
-// ShowOutput .
-func ShowOutput(context echo.Context) error {
-	address := context.Param("address")
-	inport, outport, err := helpers.GetOutput(address)
+// GetInput .
+func GetInput(ectx echo.Context) error {
+	address := ectx.Param("address")
+	output := ectx.Param("output")
+
+	l := log.L.Named(address)
+	l.Infof("Getting input for output %s", output)
+
+	input, err := switcher.GetInput(ectx.Request().Context(), address)
 	if err != nil {
-		log.L.Errorf("failed to get output on %s: %s", address, err)
-		return context.JSON(http.StatusInternalServerError, err)
+		l.Warnf("%s", err.Error())
+		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	input, _ := strconv.Atoi(inport)
-	input = input - 1
-	log.L.Infof("input: %d", input)
-	output, _ := strconv.Atoi(outport)
-	output--
-	log.L.Infof("ouput: %d", output)
+	l.Infof("Input for output %v is %v", output, input)
 
-	return context.JSON(http.StatusOK, status.Input{Input: fmt.Sprintf("%v:%v", input, output)})
+	return ectx.JSON(http.StatusOK, status.Input{
+		Input: fmt.Sprintf("%v:%v", input, output),
+	})
 }
 
 // HardwareInfo .
-func HardwareInfo(context echo.Context) error {
-	address := context.Param("address")
+func HardwareInfo(ectx echo.Context) error {
+	address := ectx.Param("address")
 
-	ipaddr, macaddr, verdata, err := helpers.GetHardware(address)
+	l := log.L.Named(address)
+	l.Infof("Getting hardware info")
+
+	info, err := switcher.GetHardwareInfo(ectx.Request().Context(), address)
 	if err != nil {
-		log.L.Errorf("failed to get hardware info from %s: %s", address, err)
-		return context.JSON(http.StatusInternalServerError, err)
+		l.Warnf("%s", err.Error())
+		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return context.JSON(http.StatusOK, structs.HardwareInfo{
-		NetworkInfo: structs.NetworkInfo{
-			IPAddress:  ipaddr,
-			MACAddress: macaddr,
-		},
-		FirmwareVersion: verdata,
-	})
+	l.Infof("Successfully got hardware info")
+
+	return ectx.JSON(http.StatusOK, info)
 }
