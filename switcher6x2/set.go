@@ -2,7 +2,6 @@ package switcher6x2
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -22,37 +21,50 @@ func AddHeaders(req *http.Request) *http.Request {
 
 // SetInput changes the input on the given output to input
 func SetInput(address, output, input string) *nerr.E {
-	out, gerr := strconv.Atoi(output)
-	if gerr != nil {
-		return nerr.Translate(gerr).Addf("unable to switch input on %s", address)
-	}
-
-	in, gerr := strconv.Atoi(input)
-	if gerr != nil {
-		return nerr.Translate(gerr).Addf("unable to switch input on %s", address)
-	}
-	//first we need to see what the volume of the current input is
-	currentVolume, err := GetVolume(address, fmt.Sprintf("out%s", output))
+	in, err := strconv.Atoi(input)
 	if err != nil {
-		return nerr.Translate(gerr).Addf("unable to switch input on %s- cannot get current volume", address)
+		return nerr.Translate(err).Addf("error when making call: %s", err)
 	}
-	//Then we need to check to see if other output has the same source input
-	otherInput, gerr := GetInput(address, output)
-	if otherInput == input {
-		SetMute(address, "out2", "true")
-	} else {
-		SetMute(address, "out2", "false")
-	}
-	//send command
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
 	payload := strings.NewReader("")
-	if out == 1 {
+	if output == "zoneOut1" {
 		payload = strings.NewReader(fmt.Sprintf("{ \n   \"setConfig\":{ \n      \"video\":{ \n         \"vidOut\":{ \n            \"hdmiOut\":{ \n               \"hdmiOutA\":{ \n                  \"videoSrc\":%v\n               }\n            }\n         }\n      }\n   }\n}", in))
 	}
-	if out == 2 {
+	if output == "zoneOut2" {
 		payload = strings.NewReader(fmt.Sprintf("{ \n   \"setConfig\":{ \n      \"video\":{ \n         \"vidOut\":{ \n            \"hdmiOut\":{ \n               \"hdmiOutB\":{ \n                  \"videoSrc\":%v\n               }\n            }\n         }\n      }\n   }\n}", in))
 	}
+	req, _ := http.NewRequest("POST", url, payload)
+	req = AddHeaders(req)
+	res, gerr := http.DefaultClient.Do(req)
+	if gerr != nil {
+		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
+	}
+	defer res.Body.Close()
 
+	return nil
+}
+
+// SetVolume changes the input on the given output to input
+func SetVolume(address, output, level string) *nerr.E {
+	//Atlona volume levels are from -90 to 10 and the number we recieve is 0-100
+	volumeLevel, err := strconv.Atoi(level)
+	if err != nil {
+		return nerr.Translate(err).Add("unable to switch change volume")
+	}
+	volumeLevel = volumeLevel - 90
+	err = SetVolumeHelper(address, output, strconv.Itoa(volumeLevel))
+	if err != nil {
+		fmt.Println(err)
+	}
+	return nil
+}
+
+//SetVolumeHelper .
+func SetVolumeHelper(address, output, level string) *nerr.E {
+	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
+	body := fmt.Sprintf("{\n    \"setConfig\": {\n        \"audio\": {\n            \"audOut\": {\n                \"%s\": {\n                    \"audioVol\": %s\n                    }\n                }\n            }\n        }\n    \n}", output, level)
+
+	payload := strings.NewReader(body)
 	req, _ := http.NewRequest("POST", url, payload)
 
 	req = AddHeaders(req)
@@ -62,127 +74,33 @@ func SetInput(address, output, input string) *nerr.E {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-
-	fmt.Println(string(body))
-	//Now we needto set the current volume on the output
-	SetVolume(address, fmt.Sprintf("out%s", output), strconv.Itoa(currentVolume))
-
 	return nil
 }
 
-// SetVolume changes the input on the given output to input
-func SetVolume(address, output, level string) (string, *nerr.E) {
-	//Atlona volume levels are from -90 to 10 and the number we recieve is 0-100
-	resp := ""
-	volumeLevel, err := strconv.Atoi(level)
-	if err != nil {
-		return "", nerr.Translate(err).Add("unable to switch change volume")
-	}
-	volumeLevel = volumeLevel - 90
-
-	//Now we need to find out which input is being routed to the output
-	if output == "out1" || output == "out2" {
-		//get what input is routed to the output
-		input, nerr := GetInput(address, output[len(output)-1:])
-		if nerr != nil {
-			fmt.Println(nerr)
-		}
-		input = fmt.Sprintf("digitalIn%s", input)
-		fmt.Println(input)
-		resp, err = SetVolumeHelper(address, input, strconv.Itoa(volumeLevel))
-		if nerr != nil {
-			fmt.Println(nerr)
-		}
-	}
-	switch {
-	case output == "aux1":
-		resp, err = SetVolumeHelper(address, "analogIn1", strconv.Itoa(volumeLevel))
-	case output == "aux2":
-		resp, err = SetVolumeHelper(address, "analogIn2", strconv.Itoa(volumeLevel))
-	case output == "aux3":
-		resp, err = SetVolumeHelper(address, "mic1", strconv.Itoa(volumeLevel))
-	}
-	if err != nil {
-		fmt.Println(err)
-	}
-	return resp, nil
-}
-
-//SetVolumeHelper .
-func SetVolumeHelper(address, input, level string) (string, *nerr.E) {
-	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
-	fmt.Println("Input: " + input + "   level:" + level)
-	payload := strings.NewReader("{\n    \"setConfig\": {\n        \"audio\": {\n            \"audIn\": {\n                \"" + input + "\": {\n                \t\"audioVol\": " + level + "\n                }\n            }\n        }\n    }\n}")
-	req, _ := http.NewRequest("POST", url, payload)
-
-	req = AddHeaders(req)
-
-	res, gerr := http.DefaultClient.Do(req)
-	if gerr != nil {
-		return "", nerr.Translate(gerr).Addf("error when making call: %s", gerr)
-	}
-	defer res.Body.Close()
-	return "", nil
-}
-
 // SetMute changes the input on the given output to input
-func SetMute(address, output, mute string) (string, *nerr.E) {
-	resp := ""
+func SetMute(address, mute string) *nerr.E {
+
 	var err *nerr.E
 	//Now we need to find out which input is being routed to the output
-	if output == "out1" || output == "out2" {
-		//get what input is routed to the output
-		input, nerr := GetInput(address, output[len(output)-1:])
-		if nerr != nil {
-			fmt.Println(nerr)
-		}
-		input = fmt.Sprintf("digitalIn%s", input)
-		fmt.Println(input)
-		resp, err := SetMuteHelper(address, input, mute)
-		if err != nil {
-			fmt.Println(err)
-		}
-		return resp, nil
-	}
-	switch {
-	case output == "aux1":
-		resp, err := SetMuteHelper(address, "analogIn1", mute)
-		if err != nil {
-			fmt.Println(err)
-		}
-		return resp, nil
-	case output == "aux2":
-		resp, err := SetMuteHelper(address, "analogIn2", mute)
-		if err != nil {
-			fmt.Println(err)
-		}
-		return resp, nil
-	case output == "aux3":
-		resp, err := SetMuteHelper(address, "mic1", mute)
-		if err != nil {
-			fmt.Println(err)
-		}
-		return resp, nil
-	}
+	err = SetMuteHelper(address, mute)
 	if err != nil {
-		fmt.Println(err)
+		return nerr.Translate(err).Addf("error when making call: %s", err)
 	}
-	return resp, nil
+	return nil
 }
 
 //SetMuteHelper .
-func SetMuteHelper(address, input, mute string) (string, *nerr.E) {
+func SetMuteHelper(address, mute string) *nerr.E {
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
-	payload := strings.NewReader("{\n    \"setConfig\": {\n        \"audio\": {\n            \"audIn\": {\n                \"" + input + "\": {\n                    \"audioMute\": " + mute + "\n                }\n            }\n        }\n    }\n}")
+	body := fmt.Sprintf("{\n\t\"setConfig\": {\n\t\t\"audio\": {\n\t\t\t\"audOut\": {\n\t\t\t\t\"zoneOut1\": {\n\t\t\t\t\t\"audioMute\": %s\n\t\t\t\t\t},\n\t\t\t\t\"zoneOut2\": {\n\t\t\t\t\t\"audioMute\": %s\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\n}", mute, mute)
+	payload := strings.NewReader(body)
 	req, _ := http.NewRequest("POST", url, payload)
-
 	req = AddHeaders(req)
 
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
-		return "", nerr.Translate(gerr).Addf("error when making call: %s", gerr)
+		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
 	defer res.Body.Close()
-	return "", nil
+	return nil
 }

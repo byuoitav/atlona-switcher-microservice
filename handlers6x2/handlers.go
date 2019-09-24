@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo"
 )
 
-// SetInput .
+// SetInput works
 func SetInput(ectx echo.Context) error {
 	address := ectx.Param("address")
 	output := ectx.Param("output")
@@ -107,33 +107,32 @@ func GetHardware(ectx echo.Context) error {
 // SetVolume .
 func SetVolume(ectx echo.Context) error {
 	address := ectx.Param("address")
-	output := ectx.Param("output")
 	level := ectx.Param("level")
+	output := ectx.Param("output")
 
 	l := log.L.Named(address)
-	l.Infof("Switching output %s to volume %s", output, level)
+	l.Infof("Changing Volume on Output %s to %s", output, level)
 
-	resp, err := switcher6x2.SetVolume(address, output, level)
+	err := switcher6x2.SetVolume(address, output, level)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
-	return ectx.JSON(http.StatusOK, resp)
+	return ectx.JSON(http.StatusOK, "ok")
 }
 
 // SetMute .
 func SetMute(ectx echo.Context) error {
 	address := ectx.Param("address")
-	output := ectx.Param("output")
 	isMuted := ectx.Param("isMuted")
 
 	l := log.L.Named(address)
-	l.Infof("Output %s: Mute = %s", output, isMuted)
+	l.Infof("Mute = %s", isMuted)
 
-	resp, err := switcher6x2.SetMute(address, output, isMuted)
+	err := switcher6x2.SetMute(address, isMuted)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
-	return ectx.JSON(http.StatusOK, resp)
+	return ectx.JSON(http.StatusOK, "pk")
 }
