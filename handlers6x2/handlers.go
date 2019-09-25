@@ -49,7 +49,7 @@ func GetInput(ectx echo.Context) error {
 	l.Infof("Input for output %v is %v", output, input)
 
 	return ectx.JSON(http.StatusOK, status.Input{
-		Input: fmt.Sprintf("%v:%v", input, output[(len(output)-1):]),
+		Input: fmt.Sprintf("%v:%v", input, output),
 	})
 }
 
@@ -120,10 +120,10 @@ func SetVolume(ectx echo.Context) error {
 	l := log.L.Named(address)
 	l.Infof("Changing Volume on Output %s to %s", output, level)
 
-	err = switcher6x2.SetVolume(address, output, level)
-	if err != nil {
-		l.Warnf("%s", err.Error())
-		return ectx.String(http.StatusInternalServerError, err.Error())
+	er := switcher6x2.SetVolume(address, output, level)
+	if er != nil {
+		l.Warnf("%s", er.Error())
+		return ectx.String(http.StatusInternalServerError, er.Error())
 	}
 
 	return ectx.JSON(http.StatusOK, status.Volume{lev})
@@ -142,10 +142,10 @@ func SetMute(ectx echo.Context) error {
 		return ectx.String(http.StatusBadRequest, "bad number")
 	}
 
-	err = switcher6x2.SetMute(address, output, isMuted)
-	if err != nil {
-		l.Warnf("%s", err.Error())
-		return ectx.String(http.StatusInternalServerError, err.Error())
+	er := switcher6x2.SetMute(address, output, isMuted)
+	if er != nil {
+		l.Warnf("%s", er.Error())
+		return ectx.String(http.StatusInternalServerError, er.Error())
 	}
 
 	return ectx.JSON(http.StatusOK, status.Mute{b})
