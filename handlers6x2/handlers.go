@@ -27,7 +27,7 @@ func SetInput(ectx echo.Context) error {
 
 	l.Infof("Successfully changed input for output %s to %s", output, input)
 	return ectx.JSON(http.StatusOK, status.Input{
-		Input: fmt.Sprintf("%v:%v", input, output),
+		Input: fmt.Sprintf("%v:%v", input, output[(len(output)-1):]),
 	})
 }
 
@@ -48,7 +48,7 @@ func GetInput(ectx echo.Context) error {
 	l.Infof("Input for output %v is %v", output, input)
 
 	return ectx.JSON(http.StatusOK, status.Input{
-		Input: fmt.Sprintf("%v:%v", input, output),
+		Input: fmt.Sprintf("%v:%v", input, output[(len(output)-1):]),
 	})
 }
 
@@ -58,7 +58,7 @@ func GetMute(ectx echo.Context) error {
 	output := ectx.Param("output")
 
 	l := log.L.Named(address)
-	l.Infof("Getting input for output %s", output)
+	l.Infof("Getting mute status for output %s", output)
 
 	resp, err := switcher6x2.GetMute(address, output)
 	if err != nil {
@@ -125,14 +125,14 @@ func SetVolume(ectx echo.Context) error {
 func SetMute(ectx echo.Context) error {
 	address := ectx.Param("address")
 	isMuted := ectx.Param("isMuted")
-
+	output := ectx.Param("output")
 	l := log.L.Named(address)
 	l.Infof("Mute = %s", isMuted)
 
-	err := switcher6x2.SetMute(address, isMuted)
+	err := switcher6x2.SetMute(address, output, isMuted)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
-	return ectx.JSON(http.StatusOK, "pk")
+	return ectx.JSON(http.StatusOK, "ok")
 }
