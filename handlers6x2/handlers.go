@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/byuoitav/atlona-switcher-microservice/switcher6x2"
 	"github.com/byuoitav/common/log"
@@ -57,6 +58,7 @@ func GetInput(ectx echo.Context) error {
 func GetMute(ectx echo.Context) error {
 	address := ectx.Param("address")
 	output := ectx.Param("output")
+	output = strings.Replace(output, "AUDIO", "", 1)
 
 	l := log.L.Named(address)
 	l.Infof("Getting mute status for output %s", output)
@@ -76,6 +78,7 @@ func GetMute(ectx echo.Context) error {
 func GetVolume(ectx echo.Context) error {
 	address := ectx.Param("address")
 	output := ectx.Param("output")
+	output = strings.Replace(output, "AUDIO", "", 1)
 
 	l := log.L.Named(address)
 	l.Infof("Getting volume for output %s", output)
@@ -111,7 +114,7 @@ func SetVolume(ectx echo.Context) error {
 	address := ectx.Param("address")
 	level := ectx.Param("level")
 	output := ectx.Param("output")
-	output = output[(len(output) - 1):]
+	output = strings.Replace(output, "AUDIO", "", 1)
 
 	lev, err := strconv.Atoi(level)
 	if err != nil {
@@ -121,7 +124,7 @@ func SetVolume(ectx echo.Context) error {
 	l := log.L.Named(address)
 	l.Infof("Changing Volume on Output %s to %s", output, level)
 
-	er := switcher6x2.SetVolume(address, output, level)
+	er := switcher6x2.SetVolume(address, output, lev)
 	if er != nil {
 		l.Warnf("%s", er.Error())
 		return ectx.String(http.StatusInternalServerError, er.Error())
@@ -135,7 +138,7 @@ func SetMute(ectx echo.Context) error {
 	address := ectx.Param("address")
 	isMuted := ectx.Param("isMuted")
 	output := ectx.Param("output")
-	output = output[(len(output) - 1):]
+	output = strings.Replace(output, "AUDIO", "", 1)
 	l := log.L.Named(address)
 	l.Infof("Mute = %s", isMuted)
 

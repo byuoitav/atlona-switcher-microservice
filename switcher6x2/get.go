@@ -21,7 +21,7 @@ func GetInput(address, output string) (string, *nerr.E) {
 	{
 		"getConfig": {
 			"video": {
-				"vidOut" {
+				"vidOut": {
 					"hdmiOut": {
 					}
 				}
@@ -41,6 +41,7 @@ func GetInput(address, output string) (string, *nerr.E) {
 
 	err = json.Unmarshal([]byte(body), &resp)
 	if err != nil {
+		fmt.Printf("%s/n", body)
 		return "", nerr.Translate(err).Addf("error when unmarshalling the response: %s", err)
 	}
 	//Get the inputsrc for the requested output
@@ -50,7 +51,7 @@ func GetInput(address, output string) (string, *nerr.E) {
 	} else if output == "2" {
 		input = strconv.Itoa(resp.Video.VidOut.HdmiOut.HdmiOutB.VideoSrc)
 	} else {
-		return input, nerr.Create("Invalid Output. Valid Output names are 1 and 2", "")
+		return input, nerr.Create("Invalid Output. Valid Output names are 1 and 2 you gave us "+output, "")
 	}
 	return input, nil
 }
@@ -124,14 +125,14 @@ func GetMute(address, output string) (bool, *nerr.E) {
 			return false, nerr.Translate(err).Addf("error when unmarshalling the response: %s", err)
 		}
 	} else {
-		return false, nerr.Create("Invalid Output. Valid Output names are 1 and 2", "")
+		return false, nerr.Create("Invalid Output. Valid Output names are 1 and 2 you gave us "+output, "")
 	}
 	if output == "1" {
 		return resp.Audio.AudOut.ZoneOut1.AnalogOut.AudioMute, nil
 	} else if output == "2" {
 		return resp.Audio.AudOut.ZoneOut2.AnalogOut.AudioMute, nil
 	} else {
-		return false, nerr.Create("Invalid Output. Valid Output names are 1 and 2", "")
+		return false, nerr.Create("Invalid Output. Valid Output names are 1 and 2 you gave us "+output, "")
 	}
 
 }
@@ -177,6 +178,6 @@ func GetVolume(address, output string) (int, *nerr.E) {
 	} else if output == "2" {
 		return resp.Audio.AudOut.ZoneOut2.AudioVol + 90, nil
 	} else {
-		return 0, nerr.Create("Invalid Output. Valid Output names are 1 and 2", "")
+		return 0, nerr.Create("Invalid Output. Valid Output names are 1 and 2 you gave us "+output, "")
 	}
 }

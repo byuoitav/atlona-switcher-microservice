@@ -70,20 +70,16 @@ func SetInput(address, output, input string) *nerr.E {
 }
 
 // SetVolume changes the input on the given output to input
-func SetVolume(address, output, level string) *nerr.E {
+func SetVolume(address, output string, level int) *nerr.E {
 	//Atlona volume levels are from -90 to 10 and the number we recieve is 0-100
-	volumeLevel, err := strconv.Atoi(level)
-	if err != nil {
-		return nerr.Translate(err).Add("unable to switch change volume")
-	}
 	//if volume level is supposed to be zero set it to zero (which is -90) on atlona
-	if volumeLevel == 0 {
-		volumeLevel = -90
+	if level == 0 {
+		level = -90
 	} else {
-		convertedVolume := -40 + math.Round(float64(volumeLevel/2))
-		volumeLevel = int(convertedVolume)
+		convertedVolume := -40 + math.Round(float64(level/2))
+		level = int(convertedVolume)
 	}
-	err = SetVolumeHelper(address, output, strconv.Itoa(volumeLevel))
+	err := SetVolumeHelper(address, output, level)
 	if err != nil {
 		return nerr.Translate(err).Add("unable to switch change volume")
 	}
@@ -91,7 +87,7 @@ func SetVolume(address, output, level string) *nerr.E {
 }
 
 //SetVolumeHelper .
-func SetVolumeHelper(address, output, level string) *nerr.E {
+func SetVolumeHelper(address, output string, level int) *nerr.E {
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
 	if output == "1" || output == "2" {
 		body := fmt.Sprintf(`
@@ -100,7 +96,7 @@ func SetVolumeHelper(address, output, level string) *nerr.E {
 				"audio": {
 					"audOut": {
 						"zoneOut%s": {
-							"audioVol": %s
+							"audioVol": %d
 						}
 					}
 				}
@@ -115,7 +111,7 @@ func SetVolumeHelper(address, output, level string) *nerr.E {
 		}
 		defer res.Body.Close()
 	} else {
-		return nerr.Create("Invalid Output. Valid Audio Output names are Audio1 and Audio2", "")
+		return nerr.Create("Invalid Output. Valid Audio Output names are Audio1 and Audio2: you gave us "+output, "")
 	}
 
 	return nil
@@ -161,7 +157,7 @@ func SetMuteHelper(address, output, mute string) *nerr.E {
 		}
 		defer res.Body.Close()
 	} else {
-		return nerr.Create("Invalid Output. Valid Output names are Audio1 and Audio2", "")
+		return nerr.Create("Invalid Output. Valid Output names are Audio1 and Audio2 you gave us "+output, "")
 	}
 	return nil
 }
