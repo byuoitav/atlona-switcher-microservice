@@ -27,7 +27,7 @@ func SetInput(ectx echo.Context) error {
 
 	l.Infof("Successfully changed input for output %s to %s", output, input)
 	return ectx.JSON(http.StatusOK, status.Input{
-		Input: fmt.Sprintf("%v:%v", input, output[(len(output)-1):]),
+		Input: fmt.Sprintf("%v:%v", input, output),
 	})
 }
 
@@ -48,7 +48,7 @@ func GetInput(ectx echo.Context) error {
 	l.Infof("Input for output %v is %v", output, input)
 
 	return ectx.JSON(http.StatusOK, status.Input{
-		Input: fmt.Sprintf("%v:%v", input, output[(len(output)-1):]),
+		Input: fmt.Sprintf("%v:%v", input, output),
 	})
 }
 
@@ -109,7 +109,7 @@ func SetVolume(ectx echo.Context) error {
 	address := ectx.Param("address")
 	level := ectx.Param("level")
 	output := ectx.Param("output")
-
+	output = output[(len(output) - 1):]
 	l := log.L.Named(address)
 	l.Infof("Changing Volume on Output %s to %s", output, level)
 
@@ -126,6 +126,7 @@ func SetMute(ectx echo.Context) error {
 	address := ectx.Param("address")
 	isMuted := ectx.Param("isMuted")
 	output := ectx.Param("output")
+	output = output[(len(output) - 1):]
 	l := log.L.Named(address)
 	l.Infof("Mute = %s", isMuted)
 

@@ -1,10 +1,9 @@
 package switcher6x2
 
 import (
-	"encoding/base64"
 	"fmt"
+	"math"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
@@ -15,7 +14,7 @@ import (
 func AddHeaders(req *http.Request) *http.Request {
 	req.Header.Add("Content-Type", "application/json")
 	//This needs to be replaced with an environmental variable
-	req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(os.Getenv("ATLONA_AUTH"))))
+	req.Header.Add("Authorization", "Basic YWRtaW46QXRsb25h")
 	return req
 }
 
@@ -28,11 +27,37 @@ func SetInput(address, output, input string) *nerr.E {
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
 	payload := strings.NewReader("")
 	if output == "zoneOut1" {
-		payload = strings.NewReader(fmt.Sprintf("{ \n   \"setConfig\":{ \n      \"video\":{ \n         \"vidOut\":{ \n            \"hdmiOut\":{ \n               \"hdmiOutA\":{ \n                  \"videoSrc\":%v\n               }\n            }\n         }\n      }\n   }\n}", in))
+		payload = strings.NewReader(fmt.Sprintf(`
+		{
+			"setConfig":{
+				"video":{
+					"vidOut":{
+						"hdmiOut":{
+							"hdmiOutA":{
+								"videoSrc":%v
+							}
+						}
+					}
+				}
+			}
+		}`, in))
 	} else if output == "zoneOut2" {
-		payload = strings.NewReader(fmt.Sprintf("{ \n   \"setConfig\":{ \n      \"video\":{ \n         \"vidOut\":{ \n            \"hdmiOut\":{ \n               \"hdmiOutB\":{ \n                  \"videoSrc\":%v\n               }\n            }\n         }\n      }\n   }\n}", in))
+		payload = strings.NewReader(fmt.Sprintf(`
+		{
+			"setConfig":{
+				"video":{
+					"vidOut":{
+						"hdmiOut":{
+							"hdmiOutB":{
+								"videoSrc":%v
+							}
+						}
+					}
+				}
+			}
+		}`, in))
 	} else {
-		return nerr.Create("Invalid Output. Valid Output names are zoneOut1 and zoneOut2", "")
+		return nerr.Create("Invalid Output. Valid Output names are 1 and 2", "")
 	}
 	req, _ := http.NewRequest("POST", url, payload)
 	req = AddHeaders(req)
@@ -41,7 +66,6 @@ func SetInput(address, output, input string) *nerr.E {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
 	defer res.Body.Close()
-
 	return nil
 }
 
@@ -52,10 +76,16 @@ func SetVolume(address, output, level string) *nerr.E {
 	if err != nil {
 		return nerr.Translate(err).Add("unable to switch change volume")
 	}
-	volumeLevel = volumeLevel - 90
+	//if volume level is supposed to be zero set it to zero (which is -90) on atlona
+	if volumeLevel == 0 {
+		volumeLevel = -90
+	} else {
+		convertedVolume := -40 + math.Round(float64(volumeLevel/2))
+		volumeLevel = int(convertedVolume)
+	}
 	err = SetVolumeHelper(address, output, strconv.Itoa(volumeLevel))
 	if err != nil {
-		fmt.Println(err)
+		return nerr.Translate(err).Add("unable to switch change volume")
 	}
 	return nil
 }
@@ -63,20 +93,29 @@ func SetVolume(address, output, level string) *nerr.E {
 //SetVolumeHelper .
 func SetVolumeHelper(address, output, level string) *nerr.E {
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
-	if output == "zoneOut1" || output == "zoneOut2" {
-		body := fmt.Sprintf("{\n    \"setConfig\": {\n        \"audio\": {\n            \"audOut\": {\n                \"%s\": {\n                    \"audioVol\": %s\n                    }\n                }\n            }\n        }\n    \n}", output, level)
+	if output == "1" || output == "2" {
+		body := fmt.Sprintf(`
+		{
+			"setConfig": {
+				"audio": {
+					"audOut": {
+						"zoneOut%s": {
+							"audioVol": %s
+						}
+					}
+				}
+			}
+		}`, output, level)
 		payload := strings.NewReader(body)
 		req, _ := http.NewRequest("POST", url, payload)
-
 		req = AddHeaders(req)
-
 		res, gerr := http.DefaultClient.Do(req)
 		if gerr != nil {
 			return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 		}
 		defer res.Body.Close()
 	} else {
-		return nerr.Create("Invalid Output. Valid Output names are zoneOut1 and zoneOut2", "")
+		return nerr.Create("Invalid Output. Valid Audio Output names are Audio1 and Audio2", "")
 	}
 
 	return nil
@@ -97,8 +136,21 @@ func SetMute(address, output, mute string) *nerr.E {
 //SetMuteHelper .
 func SetMuteHelper(address, output, mute string) *nerr.E {
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
-	if output == "zoneOut1" || output == "zoneOut2" {
-		body := fmt.Sprintf("{\n    \"setConfig\": {\n        \"audio\": {\n            \"audOut\": {\n                \"%s\": {\n                \t\"analogOut\": {\n                \t\t\"audioMute\": %s\n                \t}\n                    }\n                }\n            }\n        }\n    \n}", output, mute)
+	if output == "1" || output == "2" {
+		body := fmt.Sprintf(`
+		{
+			"setConfig": {
+				"audio": {
+					"audOut": {
+						"zoneOut%s": {
+							"analogOut": {
+								"audioMute": %s
+							}
+						}
+					}
+				}
+			}
+		}`, output, mute)
 		payload := strings.NewReader(body)
 		req, _ := http.NewRequest("POST", url, payload)
 		req = AddHeaders(req)
@@ -109,7 +161,7 @@ func SetMuteHelper(address, output, mute string) *nerr.E {
 		}
 		defer res.Body.Close()
 	} else {
-		return nerr.Create("Invalid Output. Valid Output names are zoneOut1 and zoneOut2", "")
+		return nerr.Create("Invalid Output. Valid Output names are Audio1 and Audio2", "")
 	}
 	return nil
 }
