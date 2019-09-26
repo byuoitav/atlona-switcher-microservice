@@ -26,7 +26,7 @@ func SetInput(address, output, input string) *nerr.E {
 	}
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
 	payload := strings.NewReader("")
-	if output == "zoneOut1" {
+	if output == "1" {
 		payload = strings.NewReader(fmt.Sprintf(`
 		{
 			"setConfig":{
@@ -41,7 +41,7 @@ func SetInput(address, output, input string) *nerr.E {
 				}
 			}
 		}`, in))
-	} else if output == "zoneOut2" {
+	} else if output == "2" {
 		payload = strings.NewReader(fmt.Sprintf(`
 		{
 			"setConfig":{
