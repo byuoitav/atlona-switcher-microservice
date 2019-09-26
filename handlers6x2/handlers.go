@@ -111,16 +111,13 @@ func SetVolume(ectx echo.Context) error {
 	address := ectx.Param("address")
 	level := ectx.Param("level")
 	output := ectx.Param("output")
-<<<<<<< HEAD
 	output = output[(len(output) - 1):]
-=======
 
 	lev, err := strconv.Atoi(level)
 	if err != nil {
 		return ectx.String(http.StatusBadRequest, "bad number")
 	}
 
->>>>>>> 0dcdcc74299c8baea5c63f4e8260128603e582c6
 	l := log.L.Named(address)
 	l.Infof("Changing Volume on Output %s to %s", output, level)
 
