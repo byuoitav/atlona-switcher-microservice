@@ -3,6 +3,7 @@ package handlers6x2
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/byuoitav/atlona-switcher-microservice/switcher6x2"
 	"github.com/byuoitav/common/log"
@@ -68,7 +69,7 @@ func GetMute(ectx echo.Context) error {
 
 	l.Infof("%s Mute: %s", output, resp)
 
-	return ectx.JSON(http.StatusOK, resp)
+	return ectx.JSON(http.StatusOK, status.Mute{resp})
 }
 
 //GetVolume .
@@ -85,7 +86,7 @@ func GetVolume(ectx echo.Context) error {
 		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return ectx.JSON(http.StatusOK, resp)
+	return ectx.JSON(http.StatusOK, status.Volume{resp})
 }
 
 //GetHardware .
@@ -101,6 +102,7 @@ func GetHardware(ectx echo.Context) error {
 		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
 
+	// TODO return a status.Hardware struct
 	return ectx.JSON(http.StatusOK, resp)
 }
 
@@ -109,16 +111,26 @@ func SetVolume(ectx echo.Context) error {
 	address := ectx.Param("address")
 	level := ectx.Param("level")
 	output := ectx.Param("output")
+<<<<<<< HEAD
 	output = output[(len(output) - 1):]
+=======
+
+	lev, err := strconv.Atoi(level)
+	if err != nil {
+		return ectx.String(http.StatusBadRequest, "bad number")
+	}
+
+>>>>>>> 0dcdcc74299c8baea5c63f4e8260128603e582c6
 	l := log.L.Named(address)
 	l.Infof("Changing Volume on Output %s to %s", output, level)
 
-	err := switcher6x2.SetVolume(address, output, level)
-	if err != nil {
-		l.Warnf("%s", err.Error())
-		return ectx.String(http.StatusInternalServerError, err.Error())
+	er := switcher6x2.SetVolume(address, output, level)
+	if er != nil {
+		l.Warnf("%s", er.Error())
+		return ectx.String(http.StatusInternalServerError, er.Error())
 	}
-	return ectx.JSON(http.StatusOK, "ok")
+
+	return ectx.JSON(http.StatusOK, status.Volume{lev})
 }
 
 // SetMute .
@@ -130,10 +142,16 @@ func SetMute(ectx echo.Context) error {
 	l := log.L.Named(address)
 	l.Infof("Mute = %s", isMuted)
 
-	err := switcher6x2.SetMute(address, output, isMuted)
+	b, err := strconv.ParseBool(isMuted)
 	if err != nil {
-		l.Warnf("%s", err.Error())
-		return ectx.String(http.StatusInternalServerError, err.Error())
+		return ectx.String(http.StatusBadRequest, "bad number")
 	}
-	return ectx.JSON(http.StatusOK, "ok")
+
+	er := switcher6x2.SetMute(address, output, isMuted)
+	if er != nil {
+		l.Warnf("%s", er.Error())
+		return ectx.String(http.StatusInternalServerError, er.Error())
+	}
+
+	return ectx.JSON(http.StatusOK, status.Mute{b})
 }
