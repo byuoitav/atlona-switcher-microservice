@@ -6,7 +6,6 @@ import (
 	"github.com/byuoitav/atlona-switcher-microservice/handlers"
 	"github.com/byuoitav/atlona-switcher-microservice/handlers5x1"
 	"github.com/byuoitav/atlona-switcher-microservice/handlers6x2"
-	"github.com/byuoitav/atlona-switcher-microservice/handlerswallplate"
 	"github.com/byuoitav/common"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/v2/auth"
@@ -29,8 +28,6 @@ func main() {
 	write.GET("/:address/volume/:level/5x1", handlers5x1.SetVolume)
 	write.GET("/:address/mute/5x1", handlers5x1.SetMute)
 	write.GET("/:address/unmute/5x1", handlers5x1.SetUnmute)
-	// Wall Plate Functionality
-	write.GET("/:address/input/:input/5x1", handlerswallplate.SetInput)
 
 	// Status/Hardware Info Endpoints
 	read := router.Group("", auth.AuthorizeRequest("read-state", "room", auth.LookupResourceFromAddress))
@@ -44,8 +41,6 @@ func main() {
 	write.GET("/:address/output/:output/input/5x1/", handlers5x1.GetInput)
 	write.GET("/:address/volume/5x1", handlers5x1.GetVolume)
 	write.GET("/:address/muteStatus/5x1", handlers5x1.GetMute)
-	// Wall Plate enpoints
-	write.GET("/:address/input/5x1", handlerswallplate.GetInput)
 
 	// log level endpoints
 	router.PUT("/log-level/:level", log.SetLogLevel)
