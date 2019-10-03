@@ -38,7 +38,7 @@ func main() {
 	read.GET("/:address/output/:output/mute/6x2", handlers6x2.GetMute)
 	read.GET("/:address/output/:output/volume/6x2", handlers6x2.GetVolume)
 	// 5x1 enpoints
-	write.GET("/:address/output/:output/input/5x1/", handlers5x1.GetInput)
+	write.GET("/:address/output/:output/input/5x1", handlers5x1.GetInput)
 	write.GET("/:address/volume/5x1", handlers5x1.GetVolume)
 	write.GET("/:address/muteStatus/5x1", handlers5x1.GetMute)
 
