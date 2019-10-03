@@ -26,8 +26,8 @@ func main() {
 	// 5x1 functionality Endpoints
 	write.GET("/:address/output/:output/input/:input/5x1", handlers5x1.SetInput)
 	write.GET("/:address/volume/:level/5x1/:input", handlers5x1.SetVolume)
-	write.GET("/:address/mute/5x1", handlers5x1.SetMute)
-	write.GET("/:address/unmute/5x1", handlers5x1.SetUnmute)
+	write.GET("/:address/mute/5x1/:input", handlers5x1.SetMute)
+	write.GET("/:address/unmute/5x1/:input", handlers5x1.SetUnmute)
 
 	// Status/Hardware Info Endpoints
 	read := router.Group("", auth.AuthorizeRequest("read-state", "room", auth.LookupResourceFromAddress))
@@ -40,7 +40,7 @@ func main() {
 	// 5x1 enpoints
 	write.GET("/:address/output/:output/input/5x1", handlers5x1.GetInput)
 	write.GET("/:address/volume/5x1/:input", handlers5x1.GetVolume)
-	write.GET("/:address/muteStatus/5x1", handlers5x1.GetMute)
+	write.GET("/:address/muteStatus/5x1/:input", handlers5x1.GetMute)
 
 	// log level endpoints
 	router.PUT("/log-level/:level", log.SetLogLevel)
