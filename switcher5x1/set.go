@@ -1,6 +1,7 @@
 package switcher5x1
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -11,8 +12,8 @@ import (
 )
 
 // SetInput changes the input on the given output to input
-func SetInput(address, input string) *nerr.E {
-	loginerr := Login(address)
+func SetInput(ctx context.Context, address, input string) *nerr.E {
+	loginerr := Login(ctx, address)
 	if loginerr != nil {
 		return nerr.Translate(loginerr).Addf("error logging in to make a request: %s", loginerr)
 	}
@@ -21,6 +22,7 @@ func SetInput(address, input string) *nerr.E {
 	if err != nil {
 		return nerr.Translate(err).Addf("error when making request: %s", err)
 	}
+	req = req.WithContext(ctx)
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
@@ -36,8 +38,8 @@ func SetInput(address, input string) *nerr.E {
 }
 
 // SetVolume changes the input on the given output to input
-func SetVolume(address string, level int) *nerr.E {
-	loginerr := Login(address)
+func SetVolume(ctx context.Context, address string, level int) *nerr.E {
+	loginerr := Login(ctx, address)
 	if loginerr != nil {
 		return nerr.Translate(loginerr).Addf("error logging in to make a request: %s", loginerr)
 	}
@@ -49,7 +51,7 @@ func SetVolume(address string, level int) *nerr.E {
 		convertedVolume := -35 + math.Round(float64(level/2))
 		level = int(convertedVolume)
 	}
-	err := SetVolumeHelper(address, level)
+	err := SetVolumeHelper(ctx, address, level)
 	if err != nil {
 		return nerr.Translate(err).Add("unable to switch change volume")
 	}
@@ -57,8 +59,8 @@ func SetVolume(address string, level int) *nerr.E {
 }
 
 //SetVolumeHelper .
-func SetVolumeHelper(address string, level int) *nerr.E {
-	loginerr := Login(address)
+func SetVolumeHelper(ctx context.Context, address string, level int) *nerr.E {
+	loginerr := Login(ctx, address)
 	if loginerr != nil {
 		return nerr.Translate(loginerr).Addf("error logging in to make a request: %s", loginerr)
 	}
@@ -67,6 +69,7 @@ func SetVolumeHelper(address string, level int) *nerr.E {
 	if err != nil {
 		return nerr.Translate(err).Addf("error when making request: %s", err)
 	}
+	req = req.WithContext(ctx)
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
@@ -83,8 +86,8 @@ func SetVolumeHelper(address string, level int) *nerr.E {
 }
 
 // SetMute changes the input on the given output to input
-func SetMute(address string) *nerr.E {
-	loginerr := Login(address)
+func SetMute(ctx context.Context, address string) *nerr.E {
+	loginerr := Login(ctx, address)
 	if loginerr != nil {
 		return nerr.Translate(loginerr).Addf("error logging in to make a request: %s", loginerr)
 	}
@@ -93,6 +96,7 @@ func SetMute(address string) *nerr.E {
 	if err != nil {
 		return nerr.Translate(err).Addf("error when making request: %s", err)
 	}
+	req = req.WithContext(ctx)
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
@@ -108,8 +112,8 @@ func SetMute(address string) *nerr.E {
 }
 
 // SetUnmute changes the input on the given output to input
-func SetUnmute(address string) *nerr.E {
-	loginerr := Login(address)
+func SetUnmute(ctx context.Context, address string) *nerr.E {
+	loginerr := Login(ctx, address)
 	if loginerr != nil {
 		return nerr.Translate(loginerr).Addf("error logging in to make a request: %s", loginerr)
 	}
@@ -118,6 +122,7 @@ func SetUnmute(address string) *nerr.E {
 	if err != nil {
 		return nerr.Translate(err).Addf("error when making request: %s", err)
 	}
+	req = req.WithContext(ctx)
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)

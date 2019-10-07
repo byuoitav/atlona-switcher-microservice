@@ -20,8 +20,8 @@ func SetInput(ectx echo.Context) error {
 
 	l := log.L.Named(address)
 	l.Infof("Switching input for output %s to %s", output, input)
-
-	err := switcher6x2.SetInput(address, output, input)
+	ctx := ectx.Request().Context()
+	err := switcher6x2.SetInput(ctx, address, output, input)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
@@ -40,8 +40,8 @@ func GetInput(ectx echo.Context) error {
 
 	l := log.L.Named(address)
 	l.Infof("Getting input for output %s", output)
-
-	input, err := switcher6x2.GetInput(address, output)
+	ctx := ectx.Request().Context()
+	input, err := switcher6x2.GetInput(ctx, address, output)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
@@ -62,8 +62,8 @@ func GetMute(ectx echo.Context) error {
 
 	l := log.L.Named(address)
 	l.Infof("Getting mute status for output %s", output)
-
-	resp, err := switcher6x2.GetMute(address, output)
+	ctx := ectx.Request().Context()
+	resp, err := switcher6x2.GetMute(ctx, address, output)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
@@ -82,8 +82,8 @@ func GetVolume(ectx echo.Context) error {
 
 	l := log.L.Named(address)
 	l.Infof("Getting volume for output %s", output)
-
-	resp, err := switcher6x2.GetVolume(address, output)
+	ctx := ectx.Request().Context()
+	resp, err := switcher6x2.GetVolume(ctx, address, output)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
@@ -98,8 +98,8 @@ func GetHardware(ectx echo.Context) error {
 
 	l := log.L.Named(address)
 	l.Infof("Getting Hardware for device %s", address)
-
-	resp, err := switcher6x2.GetHardwareInfo(address)
+	ctx := ectx.Request().Context()
+	resp, err := switcher6x2.GetHardwareInfo(ctx, address)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
@@ -123,8 +123,8 @@ func SetVolume(ectx echo.Context) error {
 
 	l := log.L.Named(address)
 	l.Infof("Changing Volume on Output %s to %s", output, level)
-
-	er := switcher6x2.SetVolume(address, output, lev)
+	ctx := ectx.Request().Context()
+	er := switcher6x2.SetVolume(ctx, address, output, lev)
 	if er != nil {
 		l.Warnf("%s", er.Error())
 		return ectx.String(http.StatusInternalServerError, er.Error())
@@ -146,8 +146,8 @@ func SetMute(ectx echo.Context) error {
 	if err != nil {
 		return ectx.String(http.StatusBadRequest, "bad number")
 	}
-
-	er := switcher6x2.SetMute(address, output, isMuted)
+	ctx := ectx.Request().Context()
+	er := switcher6x2.SetMute(ctx, address, output, isMuted)
 	if er != nil {
 		l.Warnf("%s", er.Error())
 		return ectx.String(http.StatusInternalServerError, er.Error())

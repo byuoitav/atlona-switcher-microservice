@@ -1,6 +1,7 @@
 package switcher5x1
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,13 +12,14 @@ import (
 )
 
 // Login Logs the user in... this should be called before every command.
-func Login(address string) *nerr.E {
+func Login(ctx context.Context, address string) *nerr.E {
 	url := fmt.Sprintf("http://%s/ajlogin.html?value=login&usn=root&pwd=Atlona", address)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nerr.Translate(err).Addf("error when making request: %s", err)
 	}
+	req = req.WithContext(ctx)
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
@@ -33,8 +35,8 @@ func Login(address string) *nerr.E {
 }
 
 // GetInput returns the current input for the requested output
-func GetInput(address string) (string, *nerr.E) {
-	loginerr := Login(address)
+func GetInput(ctx context.Context, address string) (string, *nerr.E) {
+	loginerr := Login(ctx, address)
 	if loginerr != nil {
 		return "", nerr.Translate(loginerr).Addf("error logging in to make a request: %s", loginerr)
 	}
@@ -43,6 +45,7 @@ func GetInput(address string) (string, *nerr.E) {
 	if err != nil {
 		return "", nerr.Translate(err).Addf("error when making request: %s", err)
 	}
+	req = req.WithContext(ctx)
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
 		return "", nerr.Translate(gerr).Addf("error when making call: %s", gerr)
@@ -58,8 +61,8 @@ func GetInput(address string) (string, *nerr.E) {
 }
 
 // GetHardwareInfo returns a hardware info struct         Change to structs.HardwareInfo
-func GetHardwareInfo(address string) (string, *nerr.E) {
-	loginerr := Login(address)
+func GetHardwareInfo(ctx context.Context, address string) (string, *nerr.E) {
+	loginerr := Login(ctx, address)
 	if loginerr != nil {
 		return "", nerr.Translate(loginerr).Addf("error logging in to make a request: %s", loginerr)
 	}
@@ -68,6 +71,7 @@ func GetHardwareInfo(address string) (string, *nerr.E) {
 	if err != nil {
 		return "", nerr.Translate(err).Addf("error when making request: %s", err)
 	}
+	req = req.WithContext(ctx)
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
 		return "", nerr.Translate(gerr).Addf("error when making call: %s", gerr)
@@ -83,8 +87,8 @@ func GetHardwareInfo(address string) (string, *nerr.E) {
 }
 
 // GetMute .
-func GetMute(address string) (bool, *nerr.E) {
-	loginerr := Login(address)
+func GetMute(ctx context.Context, address string) (bool, *nerr.E) {
+	loginerr := Login(ctx, address)
 	if loginerr != nil {
 		return false, nerr.Translate(loginerr).Addf("error logging in to make a request: %s", loginerr)
 	}
@@ -93,6 +97,7 @@ func GetMute(address string) (bool, *nerr.E) {
 	if err != nil {
 		return false, nerr.Translate(err).Addf("error when making request: %s", err)
 	}
+	req = req.WithContext(ctx)
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
 		return false, nerr.Translate(gerr).Addf("error when making call: %s", gerr)
@@ -111,9 +116,9 @@ func GetMute(address string) (bool, *nerr.E) {
 	return false, nil
 }
 
-// GetVolume.
-func GetVolume(address string) (int, *nerr.E) {
-	loginerr := Login(address)
+//GetVolume .
+func GetVolume(ctx context.Context, address string) (int, *nerr.E) {
+	loginerr := Login(ctx, address)
 	if loginerr != nil {
 		return 0, nerr.Translate(loginerr).Addf("error logging in to make a request: %s", loginerr)
 	}
@@ -122,6 +127,7 @@ func GetVolume(address string) (int, *nerr.E) {
 	if err != nil {
 		return 0, nerr.Translate(err).Addf("error when making request: %s", err)
 	}
+	req = req.WithContext(ctx)
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
 		return 0, nerr.Translate(gerr).Addf("error when making call: %s", gerr)
