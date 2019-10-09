@@ -57,3 +57,15 @@ type AtlonaAudio struct {
 		} `json:"audOut"`
 	} `json:"audio"`
 }
+
+//WallPlateStruct .
+type WallPlateStruct struct {
+	LoginUr   int    `json:"login_ur"`
+	LoginUser string `json:"login_user"`
+	Inp       int    `json:"inp"`
+	Asw       int    `json:"asw"`
+	Preport   int    `json:"preport"`
+	Aswtime   int    `json:"aswtime"`
+	HDMIAud   int    `json:"HDMIAud"`
+	HDCPSet   []int  `json:"HDCPSet"`
+}

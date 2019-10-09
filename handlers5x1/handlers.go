@@ -1,12 +1,11 @@
-package handlers6x2
+package handlers5x1
 
 import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
-	"github.com/byuoitav/atlona-switcher-microservice/switcher6x2"
+	"github.com/byuoitav/atlona-switcher-microservice/switcher5x1"
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/status"
 	"github.com/labstack/echo"
@@ -15,91 +14,92 @@ import (
 // SetInput works
 func SetInput(ectx echo.Context) error {
 	address := ectx.Param("address")
-	output := ectx.Param("output")
 	input := ectx.Param("input")
-
 	l := log.L.Named(address)
-	l.Infof("Switching input for output %s to %s", output, input)
+	l.Infof("Switching input to %s", input)
+	intInput, nerr := strconv.Atoi(input)
+	if nerr != nil {
+		return ectx.String(http.StatusInternalServerError, nerr.Error())
+	}
+	if intInput > 4 {
+		l.Warnf("The input requested must be between 0-4")
+		return ectx.String(http.StatusInternalServerError, "Invalid Input")
+	}
 	ctx := ectx.Request().Context()
-	err := switcher6x2.SetInput(ctx, address, output, input)
-	if err != nil {
-		l.Warnf("%s", err.Error())
-		return ectx.String(http.StatusInternalServerError, err.Error())
+	er := switcher5x1.SetInput(ctx, address, input)
+	fmt.Println("IM HERE!!!!!!!!")
+	if er != nil {
+		l.Warnf("%s", er.Error())
+		return ectx.String(http.StatusInternalServerError, er.Error())
 	}
 
-	l.Infof("Successfully changed input for output %s to %s", output, input)
+	l.Infof("Successfully changed input to %s", input)
 	return ectx.JSON(http.StatusOK, status.Input{
-		Input: fmt.Sprintf("%v:%v", input, output),
+		Input: fmt.Sprintf("%v:1", input),
 	})
 }
 
-// GetInput .
+// GetInput works
 func GetInput(ectx echo.Context) error {
 	address := ectx.Param("address")
-	output := ectx.Param("output")
 
 	l := log.L.Named(address)
-	l.Infof("Getting input for output %s", output)
+	l.Infof("Getting input")
 	ctx := ectx.Request().Context()
-	input, err := switcher6x2.GetInput(ctx, address, output)
+	input, err := switcher5x1.GetInput(ctx, address)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	l.Infof("Input for output %v is %v", output, input)
+	l.Infof("Input is %s", input)
 
 	return ectx.JSON(http.StatusOK, status.Input{
-		Input: fmt.Sprintf("%v:%v", input, output),
+		Input: fmt.Sprintf("%s:1", input),
 	})
 }
 
-//GetMute .
+//GetMute works
 func GetMute(ectx echo.Context) error {
 	address := ectx.Param("address")
-	output := ectx.Param("output")
-	output = strings.Replace(output, "AUDIO", "", 1)
 
 	l := log.L.Named(address)
-	l.Infof("Getting mute status for output %s", output)
+	l.Infof("Getting mute status")
 	ctx := ectx.Request().Context()
-	resp, err := switcher6x2.GetMute(ctx, address, output)
+	resp, err := switcher5x1.GetMute(ctx, address)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	l.Infof("%s Mute: %s", output, resp)
+	l.Infof("Output Mute Status: %s", resp)
 
-	return ectx.JSON(http.StatusOK, status.Mute{resp})
+	return ectx.JSON(http.StatusOK, status.Mute{Muted: resp})
 }
 
 //GetVolume .
 func GetVolume(ectx echo.Context) error {
 	address := ectx.Param("address")
-	output := ectx.Param("output")
-	output = strings.Replace(output, "AUDIO", "", 1)
 
 	l := log.L.Named(address)
-	l.Infof("Getting volume for output %s", output)
+	l.Infof("Getting volume")
 	ctx := ectx.Request().Context()
-	resp, err := switcher6x2.GetVolume(ctx, address, output)
+	resp, err := switcher5x1.GetVolume(ctx, address)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
 	}
-
-	return ectx.JSON(http.StatusOK, status.Volume{resp})
+	return ectx.JSON(http.StatusOK, status.Volume{Volume: resp})
 }
 
-//GetHardware .
+//GetHardware TODO
 func GetHardware(ectx echo.Context) error {
 	address := ectx.Param("address")
 
 	l := log.L.Named(address)
 	l.Infof("Getting Hardware for device %s", address)
 	ctx := ectx.Request().Context()
-	resp, err := switcher6x2.GetHardwareInfo(ctx, address)
+	resp, err := switcher5x1.GetHardwareInfo(ctx, address)
 	if err != nil {
 		l.Warnf("%s", err.Error())
 		return ectx.String(http.StatusInternalServerError, err.Error())
@@ -109,12 +109,10 @@ func GetHardware(ectx echo.Context) error {
 	return ectx.JSON(http.StatusOK, resp)
 }
 
-// SetVolume .
+// SetVolume works
 func SetVolume(ectx echo.Context) error {
 	address := ectx.Param("address")
 	level := ectx.Param("level")
-	output := ectx.Param("output")
-	output = strings.Replace(output, "AUDIO", "", 1)
 
 	lev, err := strconv.Atoi(level)
 	if err != nil {
@@ -122,36 +120,44 @@ func SetVolume(ectx echo.Context) error {
 	}
 
 	l := log.L.Named(address)
-	l.Infof("Changing Volume on Output %s to %s", output, level)
+	l.Infof("Changing Volume to %s", level)
 	ctx := ectx.Request().Context()
-	er := switcher6x2.SetVolume(ctx, address, output, lev)
+	er := switcher5x1.SetVolume(ctx, address, lev)
 	if er != nil {
 		l.Warnf("%s", er.Error())
 		return ectx.String(http.StatusInternalServerError, er.Error())
 	}
 
-	return ectx.JSON(http.StatusOK, status.Volume{lev})
+	return ectx.JSON(http.StatusOK, status.Volume{Volume: lev})
 }
 
-// SetMute .
+// SetMute Works
 func SetMute(ectx echo.Context) error {
 	address := ectx.Param("address")
-	isMuted := ectx.Param("isMuted")
-	output := ectx.Param("output")
-	output = strings.Replace(output, "AUDIO", "", 1)
-	l := log.L.Named(address)
-	l.Infof("Mute = %s", isMuted)
-
-	b, err := strconv.ParseBool(isMuted)
-	if err != nil {
-		return ectx.String(http.StatusBadRequest, "bad number")
-	}
 	ctx := ectx.Request().Context()
-	er := switcher6x2.SetMute(ctx, address, output, isMuted)
+	er := switcher5x1.SetMute(ctx, address)
+
+	l := log.L.Named(address)
+	l.Infof("Changing Mute to true")
 	if er != nil {
 		l.Warnf("%s", er.Error())
 		return ectx.String(http.StatusInternalServerError, er.Error())
 	}
 
-	return ectx.JSON(http.StatusOK, status.Mute{b})
+	return ectx.JSON(http.StatusOK, status.Mute{Muted: true})
+}
+
+// SetUnmute Works
+func SetUnmute(ectx echo.Context) error {
+	address := ectx.Param("address")
+	ctx := ectx.Request().Context()
+	er := switcher5x1.SetUnmute(ctx, address)
+	l := log.L.Named(address)
+	l.Infof("Changing Mute to false")
+	if er != nil {
+		l.Warnf("%s", er.Error())
+		return ectx.String(http.StatusInternalServerError, er.Error())
+	}
+
+	return ectx.JSON(http.StatusOK, status.Mute{Muted: false})
 }

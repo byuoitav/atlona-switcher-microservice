@@ -1,6 +1,7 @@
 package switcher6x2
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,7 +14,7 @@ import (
 )
 
 // GetInput returns the current input for the requested output
-func GetInput(address, output string) (string, *nerr.E) {
+func GetInput(ctx context.Context, address, output string) (string, *nerr.E) {
 	var resp structs.AtlonaVideo
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
 
@@ -31,7 +32,7 @@ func GetInput(address, output string) (string, *nerr.E) {
 	payload := strings.NewReader(requestBody)
 	req, _ := http.NewRequest("POST", url, payload)
 	req = AddHeaders(req)
-
+	req = req.WithContext(ctx)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", nerr.Translate(err).Addf("error when making call: %s", err)
@@ -57,7 +58,7 @@ func GetInput(address, output string) (string, *nerr.E) {
 }
 
 // GetHardwareInfo returns a hardware info struct         Change to structs.HardwareInfo
-func GetHardwareInfo(address string) (structs.AtlonaNetwork, *nerr.E) {
+func GetHardwareInfo(ctx context.Context, address string) (structs.AtlonaNetwork, *nerr.E) {
 	var resp structs.AtlonaNetwork
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
 
@@ -73,7 +74,7 @@ func GetHardwareInfo(address string) (structs.AtlonaNetwork, *nerr.E) {
 	req, _ := http.NewRequest("POST", url, payload)
 
 	req = AddHeaders(req)
-
+	req = req.WithContext(ctx)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return resp, nerr.Translate(err).Addf("error when making call: %s", err)
@@ -90,7 +91,7 @@ func GetHardwareInfo(address string) (structs.AtlonaNetwork, *nerr.E) {
 }
 
 // GetMute .
-func GetMute(address, output string) (bool, *nerr.E) {
+func GetMute(ctx context.Context, address, output string) (bool, *nerr.E) {
 	var resp structs.AtlonaAudio
 	if output == "1" || output == "2" {
 		url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
@@ -110,7 +111,7 @@ func GetMute(address, output string) (bool, *nerr.E) {
 		payload := strings.NewReader(requestBody)
 
 		req, _ := http.NewRequest("POST", url, payload)
-
+		req = req.WithContext(ctx)
 		req = AddHeaders(req)
 
 		res, err := http.DefaultClient.Do(req)
@@ -138,7 +139,7 @@ func GetMute(address, output string) (bool, *nerr.E) {
 }
 
 // GetVolume TODO: convert the value returned back to a 0-100 value
-func GetVolume(address, output string) (int, *nerr.E) {
+func GetVolume(ctx context.Context, address, output string) (int, *nerr.E) {
 	var resp structs.AtlonaAudio
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
 	requestBody := fmt.Sprintf(`
@@ -155,7 +156,7 @@ func GetVolume(address, output string) (int, *nerr.E) {
 	req, _ := http.NewRequest("POST", url, payload)
 
 	req = AddHeaders(req)
-
+	req = req.WithContext(ctx)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return 0, nerr.Translate(err).Addf("error when making call: %s", err)

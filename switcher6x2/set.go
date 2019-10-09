@@ -1,6 +1,7 @@
 package switcher6x2
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net/http"
@@ -19,7 +20,7 @@ func AddHeaders(req *http.Request) *http.Request {
 }
 
 // SetInput changes the input on the given output to input
-func SetInput(address, output, input string) *nerr.E {
+func SetInput(ctx context.Context, address, output, input string) *nerr.E {
 	in, err := strconv.Atoi(input)
 	if err != nil {
 		return nerr.Translate(err).Addf("error when making call: %s", err)
@@ -61,6 +62,7 @@ func SetInput(address, output, input string) *nerr.E {
 	}
 	req, _ := http.NewRequest("POST", url, payload)
 	req = AddHeaders(req)
+	req = req.WithContext(ctx)
 	res, gerr := http.DefaultClient.Do(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
@@ -70,7 +72,7 @@ func SetInput(address, output, input string) *nerr.E {
 }
 
 // SetVolume changes the input on the given output to input
-func SetVolume(address, output string, level int) *nerr.E {
+func SetVolume(ctx context.Context, address, output string, level int) *nerr.E {
 	//Atlona volume levels are from -90 to 10 and the number we recieve is 0-100
 	//if volume level is supposed to be zero set it to zero (which is -90) on atlona
 	if level == 0 {
@@ -79,7 +81,7 @@ func SetVolume(address, output string, level int) *nerr.E {
 		convertedVolume := -40 + math.Round(float64(level/2))
 		level = int(convertedVolume)
 	}
-	err := SetVolumeHelper(address, output, level)
+	err := SetVolumeHelper(ctx, address, output, level)
 	if err != nil {
 		return nerr.Translate(err).Add("unable to switch change volume")
 	}
@@ -87,7 +89,7 @@ func SetVolume(address, output string, level int) *nerr.E {
 }
 
 //SetVolumeHelper .
-func SetVolumeHelper(address, output string, level int) *nerr.E {
+func SetVolumeHelper(ctx context.Context, address, output string, level int) *nerr.E {
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
 	if output == "1" || output == "2" {
 		body := fmt.Sprintf(`
@@ -105,6 +107,7 @@ func SetVolumeHelper(address, output string, level int) *nerr.E {
 		payload := strings.NewReader(body)
 		req, _ := http.NewRequest("POST", url, payload)
 		req = AddHeaders(req)
+		req = req.WithContext(ctx)
 		res, gerr := http.DefaultClient.Do(req)
 		if gerr != nil {
 			return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
@@ -118,11 +121,11 @@ func SetVolumeHelper(address, output string, level int) *nerr.E {
 }
 
 // SetMute changes the input on the given output to input
-func SetMute(address, output, mute string) *nerr.E {
+func SetMute(ctx context.Context, address, output, mute string) *nerr.E {
 
 	var err *nerr.E
 	//Now we need to find out which input is being routed to the output
-	err = SetMuteHelper(address, output, mute)
+	err = SetMuteHelper(ctx, address, output, mute)
 	if err != nil {
 		return nerr.Translate(err).Addf("error when making call: %s", err)
 	}
@@ -130,7 +133,7 @@ func SetMute(address, output, mute string) *nerr.E {
 }
 
 //SetMuteHelper .
-func SetMuteHelper(address, output, mute string) *nerr.E {
+func SetMuteHelper(ctx context.Context, address, output, mute string) *nerr.E {
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
 	if output == "1" || output == "2" {
 		body := fmt.Sprintf(`
@@ -150,7 +153,7 @@ func SetMuteHelper(address, output, mute string) *nerr.E {
 		payload := strings.NewReader(body)
 		req, _ := http.NewRequest("POST", url, payload)
 		req = AddHeaders(req)
-
+		req = req.WithContext(ctx)
 		res, gerr := http.DefaultClient.Do(req)
 		if gerr != nil {
 			return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
