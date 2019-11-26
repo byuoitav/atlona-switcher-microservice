@@ -33,7 +33,7 @@ func GetInput(ctx context.Context, address, output string) (string, *nerr.E) {
 	req, _ := http.NewRequest("POST", url, payload)
 	req = AddHeaders(req)
 	req = req.WithContext(ctx)
-	res, err := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)	
 	if err != nil {
 		return "", nerr.Translate(err).Addf("error when making call: %s", err)
 	}
@@ -75,7 +75,7 @@ func GetHardwareInfo(ctx context.Context, address string) (structs.AtlonaNetwork
 
 	req = AddHeaders(req)
 	req = req.WithContext(ctx)
-	res, err := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)	
 	if err != nil {
 		return resp, nerr.Translate(err).Addf("error when making call: %s", err)
 	}
@@ -115,6 +115,7 @@ func GetMute(ctx context.Context, address, output string) (bool, *nerr.E) {
 		req = AddHeaders(req)
 
 		res, err := http.DefaultClient.Do(req)
+		
 		if err != nil {
 			return false, nerr.Translate(err).Addf("error when making call: %s", err)
 		}
@@ -158,6 +159,7 @@ func GetVolume(ctx context.Context, address, output string) (int, *nerr.E) {
 	req = AddHeaders(req)
 	req = req.WithContext(ctx)
 	res, err := http.DefaultClient.Do(req)
+	
 	if err != nil {
 		return 0, nerr.Translate(err).Addf("error when making call: %s", err)
 	}
