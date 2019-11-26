@@ -20,7 +20,8 @@ func Login(ctx context.Context, address string) *nerr.E {
 		return nerr.Translate(err).Addf("error when making request: %s", err)
 	}
 	req = req.WithContext(ctx)
-	res, gerr := http.DefaultClient.Do(req)
+	//res, gerr := http.DefaultClient.Do(req)
+	res, gerr := make5x1Request(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
@@ -46,7 +47,8 @@ func GetInput(ctx context.Context, address string) (string, *nerr.E) {
 		return "", nerr.Translate(err).Addf("error when making request: %s", err)
 	}
 	req = req.WithContext(ctx)
-	res, gerr := http.DefaultClient.Do(req)
+	//res, gerr := http.DefaultClient.Do(req)
+	res, gerr := make5x1Request(req)
 	if gerr != nil {
 		return "", nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
@@ -72,7 +74,8 @@ func GetHardwareInfo(ctx context.Context, address string) (string, *nerr.E) {
 		return "", nerr.Translate(err).Addf("error when making request: %s", err)
 	}
 	req = req.WithContext(ctx)
-	res, gerr := http.DefaultClient.Do(req)
+	//res, gerr := http.DefaultClient.Do(req)
+	res, gerr := make5x1Request(req)
 	if gerr != nil {
 		return "", nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
@@ -98,7 +101,8 @@ func GetMute(ctx context.Context, address string) (bool, *nerr.E) {
 		return false, nerr.Translate(err).Addf("error when making request: %s", err)
 	}
 	req = req.WithContext(ctx)
-	res, gerr := http.DefaultClient.Do(req)
+	//res, gerr := http.DefaultClient.Do(req)
+	res, gerr := make5x1Request(req)
 	if gerr != nil {
 		return false, nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
@@ -128,7 +132,8 @@ func GetVolume(ctx context.Context, address string) (int, *nerr.E) {
 		return 0, nerr.Translate(err).Addf("error when making request: %s", err)
 	}
 	req = req.WithContext(ctx)
-	res, gerr := http.DefaultClient.Do(req)
+	//res, gerr := http.DefaultClient.Do(req)
+	res, gerr := make5x1Request(req)
 	if gerr != nil {
 		return 0, nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}

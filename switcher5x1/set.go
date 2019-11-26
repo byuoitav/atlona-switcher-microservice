@@ -23,7 +23,8 @@ func SetInput(ctx context.Context, address, input string) *nerr.E {
 		return nerr.Translate(err).Addf("error when making request: %s", err)
 	}
 	req = req.WithContext(ctx)
-	res, gerr := http.DefaultClient.Do(req)
+	//res, gerr := http.DefaultClient.Do(req)
+	res, gerr := make5x1Request(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
@@ -70,7 +71,8 @@ func SetVolumeHelper(ctx context.Context, address string, level int) *nerr.E {
 		return nerr.Translate(err).Addf("error when making request: %s", err)
 	}
 	req = req.WithContext(ctx)
-	res, gerr := http.DefaultClient.Do(req)
+	//res, gerr := http.DefaultClient.Do(req)
+	res, gerr := make5x1Request(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
@@ -97,7 +99,8 @@ func SetMute(ctx context.Context, address string) *nerr.E {
 		return nerr.Translate(err).Addf("error when making request: %s", err)
 	}
 	req = req.WithContext(ctx)
-	res, gerr := http.DefaultClient.Do(req)
+	//res, gerr := http.DefaultClient.Do(req)
+	res, gerr := make5x1Request(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
@@ -123,7 +126,8 @@ func SetUnmute(ctx context.Context, address string) *nerr.E {
 		return nerr.Translate(err).Addf("error when making request: %s", err)
 	}
 	req = req.WithContext(ctx)
-	res, gerr := http.DefaultClient.Do(req)
+	//res, gerr := http.DefaultClient.Do(req)
+	res, gerr := make5x1Request(req)
 	if gerr != nil {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
