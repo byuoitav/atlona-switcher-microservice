@@ -19,7 +19,7 @@ func SetInput(ectx echo.Context) error {
 	input := ectx.Param("input")
 
 	l := log.L.Named(address)
-	l.Infof("Switching input for output %s to %s", output, input)
+	l.Infof("Switching input for output %q to %s", output, input)
 	ctx := ectx.Request().Context()
 	err := switcher6x2.SetInput(ctx, address, output, input)
 	if err != nil {

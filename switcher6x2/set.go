@@ -25,7 +25,9 @@ func SetInput(ctx context.Context, address, output, input string) *nerr.E {
 	if err != nil {
 		return nerr.Translate(err).Addf("error when making call: %s", err)
 	}
+
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
+
 	var payload *strings.Reader
 	if output == "1" {
 		payload = strings.NewReader(fmt.Sprintf(`
@@ -69,6 +71,7 @@ func SetInput(ctx context.Context, address, output, input string) *nerr.E {
 		return nerr.Translate(gerr).Addf("error when making call: %s", gerr)
 	}
 	defer res.Body.Close()
+
 	return nil
 }
 

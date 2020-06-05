@@ -45,6 +45,7 @@ func GetInput(ctx context.Context, address, output string) (string, *nerr.E) {
 		fmt.Printf("%s/n", body)
 		return "", nerr.Translate(err).Addf("error when unmarshalling the response: %s", err)
 	}
+
 	//Get the inputsrc for the requested output
 	input := ""
 	if output == "1" {
@@ -54,6 +55,7 @@ func GetInput(ctx context.Context, address, output string) (string, *nerr.E) {
 	} else {
 		input = strconv.Itoa(resp.Video.VidOut.HdmiOut.Mirror.VideoSrc)
 	}
+
 	return input, nil
 }
 
