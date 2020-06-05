@@ -11,6 +11,9 @@ type AtlonaVideo struct {
 				HdmiOutB struct {
 					VideoSrc int `json:"videoSrc"`
 				} `json:"hdmiOutB"`
+				Mirror struct {
+					VideoSrc int `json:"videoSrc"`
+				} `json:"mirror"`
 			} `json:"hdmiOut"`
 		} `json:"vidOut"`
 	} `json:"video"`

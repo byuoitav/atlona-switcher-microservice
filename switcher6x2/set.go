@@ -26,7 +26,7 @@ func SetInput(ctx context.Context, address, output, input string) *nerr.E {
 		return nerr.Translate(err).Addf("error when making call: %s", err)
 	}
 	url := fmt.Sprintf("http://%s/cgi-bin/config.cgi", address)
-	payload := strings.NewReader("")
+	var payload *strings.Reader
 	if output == "1" {
 		payload = strings.NewReader(fmt.Sprintf(`
 		{
@@ -58,8 +58,9 @@ func SetInput(ctx context.Context, address, output, input string) *nerr.E {
 			}
 		}`, in))
 	} else {
-		return nerr.Create("Invalid Output. Valid Output names are 1 and 2", "")
+		payload = strings.NewReader(fmt.Sprintf(`{"setConfig":{"video":{"vidOut":{"hdmiOut":{"mirror":{"videoSrc":%v}}}}}}`, in))
 	}
+
 	req, _ := http.NewRequest("POST", url, payload)
 	req = AddHeaders(req)
 	req = req.WithContext(ctx)

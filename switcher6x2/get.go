@@ -52,7 +52,7 @@ func GetInput(ctx context.Context, address, output string) (string, *nerr.E) {
 	} else if output == "2" {
 		input = strconv.Itoa(resp.Video.VidOut.HdmiOut.HdmiOutB.VideoSrc)
 	} else {
-		return input, nerr.Create("Invalid Output. Valid Output names are 1 and 2 you gave us "+output, "")
+		input = strconv.Itoa(resp.Video.VidOut.HdmiOut.Mirror.VideoSrc)
 	}
 	return input, nil
 }
