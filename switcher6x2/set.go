@@ -82,7 +82,7 @@ func SetVolume(ctx context.Context, address, output string, level int) *nerr.E {
 	if level == 0 {
 		level = -90
 	} else {
-		convertedVolume := -40 + math.Round(float64(level/2))
+		convertedVolume := -50 + math.Round(float64(level/2))
 		level = int(convertedVolume)
 	}
 	err := SetVolumeHelper(ctx, address, output, level)

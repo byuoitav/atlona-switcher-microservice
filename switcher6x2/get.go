@@ -170,16 +170,21 @@ func GetVolume(ctx context.Context, address, output string) (int, *nerr.E) {
 	if err != nil {
 		return 0, nerr.Translate(err).Addf("error when unmarshalling the response: %s", err)
 	}
+
 	if output == "1" {
-		if resp.Audio.AudOut.ZoneOut1.AudioVol < -40 {
+		if resp.Audio.AudOut.ZoneOut1.AudioVol < -50 {
 			return 0, nil
 		} else {
-			volume := ((resp.Audio.AudOut.ZoneOut1.AudioVol + 40) * 2)
+			volume := ((resp.Audio.AudOut.ZoneOut1.AudioVol + 50) * 2)
 			return volume, nil
 		}
-
 	} else if output == "2" {
-		return resp.Audio.AudOut.ZoneOut2.AudioVol + 90, nil
+		if resp.Audio.AudOut.ZoneOut2.AudioVol < -50 {
+			return 0, nil
+		} else {
+			volume := ((resp.Audio.AudOut.ZoneOut2.AudioVol + 50) * 2)
+			return volume, nil
+		}
 	} else {
 		return 0, nerr.Create("Invalid Output. Valid Output names are 1 and 2 you gave us "+output, "")
 	}
