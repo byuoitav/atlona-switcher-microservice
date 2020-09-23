@@ -24,6 +24,7 @@ func main() {
 	write.GET("/:address/output/:output/input/:input/6x2", handlers6x2.SetInput)
 	write.GET("/:address/output/:output/volume/:level/6x2", handlers6x2.SetVolume)
 	write.GET("/:address/output/:output/mute/:isMuted/6x2", handlers6x2.SetMute)
+
 	// 5x1 functionality Endpoints
 	write.GET("/:address/output/:output/input/:input/5x1", handlers5x1.SetInput)
 	write.GET("/:address/volume/:level/5x1/:input", handlers5x1.SetVolume)
