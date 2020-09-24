@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/byuoitav/atlona-driver"
@@ -21,94 +23,150 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 
 	// get state
 	ps62.GET("/output/:output/input", func(c echo.Context) error {
-		vs := h.CreateVideoSwitcher(c.Param("address"))
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+
+		l.Printf("Getting inputs")
 
 		inputs, err := vs.GetAudioVideoInputs(c.Request().Context())
 		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+			l.Printf("unable to get inputs: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
 		}
 
 		out := c.Param("output")
-		in := inputs[out]
+		in, ok := inputs[out]
+		if !ok {
+			l.Printf("invalid output %q requested", out)
+			return c.String(http.StatusBadRequest, "invalid output")
+		}
 
+		l.Printf("Got inputs: %+v", inputs)
 		return c.JSON(http.StatusOK, status.Input{
 			Input: fmt.Sprintf("%v:%v", in, out),
 		})
 	})
 
 	ps62.GET("/block/:block/volume", func(c echo.Context) error {
-		vs := h.CreateVideoSwitcher(c.Param("address"))
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+
+		l.Printf("Getting volumes")
 
 		vols, err := vs.GetVolumes(c.Request().Context(), []string{})
 		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+			l.Printf("unable to get volumes: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
 		}
 
+		block := c.Param("block")
+		vol, ok := vols[block]
+		if !ok {
+			l.Printf("invalid block %q requested", block)
+			return c.String(http.StatusBadRequest, "invalid block")
+		}
+
+		l.Printf("Got volumes: %+v", vols)
 		return c.JSON(http.StatusOK, status.Volume{
-			Volume: vols[c.Param("block")],
+			Volume: vol,
 		})
 	})
 
 	ps62.GET("/block/:block/muted", func(c echo.Context) error {
-		vs := h.CreateVideoSwitcher(c.Param("address"))
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+
+		l.Printf("Getting mutes")
 
 		mutes, err := vs.GetMutes(c.Request().Context(), []string{})
 		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+			l.Printf("unable to get mutes: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
 		}
 
+		block := c.Param("block")
+		mute, ok := mutes[block]
+		if !ok {
+			l.Printf("invalid block %q requested", block)
+			return c.String(http.StatusBadRequest, "invalid block")
+		}
+
+		l.Printf("Got mutes: %+v", mutes)
 		return c.JSON(http.StatusOK, status.Mute{
-			Muted: mutes[c.Param("block")],
+			Muted: mute,
 		})
 	})
 
 	// set state
 	ps62.GET("/output/:output/input/:input", func(c echo.Context) error {
-		vs := h.CreateVideoSwitcher(c.Param("address"))
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
 		out := c.Param("output")
 		in := c.Param("input")
 
+		l.Printf("Setting AV input on %q to %q", out, in)
+
 		err := vs.SetAudioVideoInput(c.Request().Context(), out, in)
 		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+			l.Printf("unable to set AV input: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
 		}
 
+		l.Printf("Set AV input")
 		return c.JSON(http.StatusOK, status.Input{
 			Input: fmt.Sprintf("%v:%v", in, out),
 		})
 	})
 
 	ps62.GET("/block/:block/volume/:volume", func(c echo.Context) error {
-		vs := h.CreateVideoSwitcher(c.Param("address"))
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+		block := c.Param("block")
 
 		vol, err := strconv.Atoi(c.Param("volume"))
 		if err != nil {
-			c.String(http.StatusBadRequest, err.Error())
+			return c.String(http.StatusBadRequest, err.Error())
 		}
 
-		err = vs.SetVolume(c.Request().Context(), c.Param("block"), vol)
+		l.Printf("Setting volume on %q to %d", block, vol)
+
+		err = vs.SetVolume(c.Request().Context(), block, vol)
 		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+			l.Printf("unable to set volume: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
 		}
 
+		l.Printf("Set volume")
 		return c.JSON(http.StatusOK, status.Volume{
 			Volume: vol,
 		})
 	})
 
 	ps62.GET("/block/:block/muted/:mute", func(c echo.Context) error {
-		vs := h.CreateVideoSwitcher(c.Param("address"))
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+		block := c.Param("block")
 
 		mute, err := strconv.ParseBool(c.Param("mute"))
 		if err != nil {
-			c.String(http.StatusBadRequest, err.Error())
+			return c.String(http.StatusBadRequest, err.Error())
 		}
 
-		err = vs.SetMute(c.Request().Context(), c.Param("block"), mute)
+		l.Printf("Setting mute on %q to %t", block, mute)
+
+		err = vs.SetMute(c.Request().Context(), block, mute)
 		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+			l.Printf("unable to set mute: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
 		}
 
+		l.Printf("Set mute")
 		return c.JSON(http.StatusOK, status.Mute{
 			Muted: mute,
 		})

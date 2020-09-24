@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/byuoitav/atlona-driver v1.5.7
 	github.com/byuoitav/common v0.0.0-20200521193927-1fdf4e0a4271
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/spf13/pflag v1.0.5
