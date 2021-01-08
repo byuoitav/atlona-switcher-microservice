@@ -9,9 +9,12 @@ import (
 	"time"
 
 	"github.com/byuoitav/atlona-driver"
+	atgain60 "github.com/byuoitav/atlona/AT-GAIN-60"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/spf13/pflag"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func main() {
@@ -34,6 +37,11 @@ func main() {
 	}
 
 	switchers := &sync.Map{}
+	amps := &sync.Map{}
+
+	cfg := zap.NewProductionConfig()
+	cfg.Level.SetLevel(zapcore.DebugLevel)
+	zapLog, _ := cfg.Build()
 
 	handlers := Handlers{
 		CreateVideoSwitcher: func(addr string) *atlona.AtOmePs62 {
@@ -50,6 +58,22 @@ func main() {
 
 			switchers.Store(addr, vs)
 			return vs
+		},
+		CreateAmp: func(addr string) *atgain60.Amp {
+			if amp, ok := amps.Load(addr); ok {
+				return amp.(*atgain60.Amp)
+			}
+
+			amp := &atgain60.Amp{
+				Address:      addr,
+				Username:     username,
+				Password:     password,
+				Log:          zapLog.Named(addr),
+				RequestDelay: 500 * time.Millisecond,
+			}
+
+			amps.Store(addr, amp)
+			return amp
 		},
 	}
 
