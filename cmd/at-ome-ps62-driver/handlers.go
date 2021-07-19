@@ -9,14 +9,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/byuoitav/atlona-driver"
 	atgain60 "github.com/byuoitav/atlona/AT-GAIN-60"
+	"github.com/byuoitav/atlona/AT-OME-PS62"
 	"github.com/byuoitav/common/status"
 	"github.com/labstack/echo"
 )
 
 type Handlers struct {
-	CreateVideoSwitcher func(string) *atlona.AtOmePs62
+	CreateVideoSwitcher func(string) *atomeps62.AtlonaVideoSwitcher6x2
 	CreateAmp           func(string) *atgain60.Amp
 }
 
@@ -33,7 +33,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 
 		l.Printf("Getting inputs")
 
-		inputs, err := vs.GetAudioVideoInputs(c.Request().Context())
+		inputs, err := vs.AudioVideoInputs(c.Request().Context())
 		if err != nil {
 			l.Printf("unable to get inputs: %s", err)
 			return c.String(http.StatusInternalServerError, err.Error())
@@ -59,7 +59,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 
 		l.Printf("Getting volumes")
 
-		vols, err := vs.GetVolumes(c.Request().Context(), []string{})
+		vols, err := vs.Volumes(c.Request().Context(), []string{})
 		if err != nil {
 			l.Printf("unable to get volumes: %s", err)
 			return c.String(http.StatusInternalServerError, err.Error())
@@ -85,7 +85,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 
 		l.Printf("Getting mutes")
 
-		mutes, err := vs.GetMutes(c.Request().Context(), []string{})
+		mutes, err := vs.Mutes(c.Request().Context(), []string{})
 		if err != nil {
 			l.Printf("unable to get mutes: %s", err)
 			return c.String(http.StatusInternalServerError, err.Error())

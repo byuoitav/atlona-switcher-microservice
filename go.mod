@@ -3,7 +3,7 @@ module github.com/byuoitav/atlona-switcher-microservice
 go 1.15
 
 require (
-	github.com/byuoitav/atlona v0.1.5
+	github.com/byuoitav/atlona v0.1.9
 	github.com/byuoitav/atlona-driver v1.5.7
 	github.com/byuoitav/common v0.0.0-20200521193927-1fdf4e0a4271
 	github.com/byuoitav/endpoint-authorization-controller v0.0.0-20190306172901-dd51e868d6df // indirect
@@ -22,4 +22,7 @@ require (
 	gopkg.in/ldap.v2 v2.5.1 // indirect
 )
 
-replace github.com/byuoitav/atlona-driver => ../atlona-driver/
+replace (
+	github.com/byuoitav/atlona-driver => ../atlona-driver/
+	github.com/byuoitav/atlona/AT-OME-PS62 => /home/creeder/go/src/github.com/byuoitav/atlona/AT-OME-PS62
+)
