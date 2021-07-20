@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/byuoitav/atlona-driver"
 	atgain60 "github.com/byuoitav/atlona/AT-GAIN-60"
+	"github.com/byuoitav/atlona/AT-OME-PS62"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/spf13/pflag"
@@ -44,12 +44,12 @@ func main() {
 	zapLog, _ := cfg.Build()
 
 	handlers := Handlers{
-		CreateVideoSwitcher: func(addr string) *atlona.AtOmePs62 {
+		CreateVideoSwitcher: func(addr string) *atomeps62.AtlonaVideoSwitcher6x2 {
 			if vs, ok := switchers.Load(addr); ok {
-				return vs.(*atlona.AtOmePs62)
+				return vs.(*atomeps62.AtlonaVideoSwitcher6x2)
 			}
 
-			vs := &atlona.AtOmePs62{
+			vs := &atomeps62.AtlonaVideoSwitcher6x2{
 				Address:      addr,
 				Username:     username,
 				Password:     password,

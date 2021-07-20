@@ -2,9 +2,15 @@ github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/byuoitav/atlona v0.1.5 h1:pQhTz8x5vT3hvaHbqqm1V5Y9l69BW9ZmoI37tmD850A=
 github.com/byuoitav/atlona v0.1.5/go.mod h1:H323w6FDvUDUAf270ux84gdnAivlzxddKK5eXU5eLGc=
+github.com/byuoitav/atlona v0.1.8 h1:Urjq676Q/TQD9nOJe3/UJ8mPBEsQnvWRdw9drZMS1j0=
+github.com/byuoitav/atlona v0.1.8/go.mod h1:uGPD/c2qFfUdExcKDoPy8e5VMq41QfLgmwcW6VqckKA=
+github.com/byuoitav/atlona v0.1.9 h1:pBneo7Hxo1U0RvhAyk7S0A88e/4bo2KxOLEP8dxnnhM=
+github.com/byuoitav/atlona v0.1.9/go.mod h1:uGPD/c2qFfUdExcKDoPy8e5VMq41QfLgmwcW6VqckKA=
+github.com/byuoitav/atlona-switcher-microservice v0.0.0-20191126173619-b128fd301655/go.mod h1:ExUW9dnW/M+r88tpEarzK13TQf0j/S/w3hVY8rF8QVs=
 github.com/byuoitav/common v0.0.0-20191009134525-e6882d6c07f5/go.mod h1:YTDTFEmez7HU3oyCIWjU3RfQ/P6v24LEzH5YUebph7I=
 github.com/byuoitav/common v0.0.0-20200521193927-1fdf4e0a4271 h1:3bUfk879CvOFb+HDPugqk0GFy7oyJDU7t/r9zC2c7j8=
 github.com/byuoitav/common v0.0.0-20200521193927-1fdf4e0a4271/go.mod h1:YTDTFEmez7HU3oyCIWjU3RfQ/P6v24LEzH5YUebph7I=
+github.com/byuoitav/connpool v0.4.1/go.mod h1:9jVn2IL91Wp6eHEymqxZ5v7zPy07FtIWp/JIfDCMGQY=
 github.com/byuoitav/endpoint-authorization-controller v0.0.0-20190306172901-dd51e868d6df h1:VJQgi+ZkQEHcS5Vn1ulM/CPQ15RWgDXKBeM6JOLA2fs=
 github.com/byuoitav/endpoint-authorization-controller v0.0.0-20190306172901-dd51e868d6df/go.mod h1:CQ4byB9NvP3rx434/7W2Rqm55p3o9J0Mv081B9dBTns=
 github.com/byuoitav/wspool v0.1.0 h1:JuONUF8lKTNP82liKV2vvIpuSmJtl8VBVphswKfrRwY=
