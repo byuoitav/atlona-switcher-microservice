@@ -10,14 +10,16 @@ import (
 	"time"
 
 	atgain60 "github.com/byuoitav/atlona/AT-GAIN-60"
-	"github.com/byuoitav/atlona/AT-OME-PS62"
+	atomeps62 "github.com/byuoitav/atlona/AT-OME-PS62"
+	atuhdsw52ed "github.com/byuoitav/atlona/AT-UHD-SW-52ED"
 	"github.com/byuoitav/common/status"
 	"github.com/labstack/echo"
 )
 
 type Handlers struct {
-	CreateVideoSwitcher func(string) *atomeps62.AtlonaVideoSwitcher6x2
-	CreateAmp           func(string) *atgain60.Amp
+	CreateVideoSwitcher6x2 func(string) *atomeps62.AtlonaVideoSwitcher6x2
+	CreateVideoSwitcher5x1 func(string) *atuhdsw52ed.AtlonaVideoSwitcher5x1
+	CreateAmp              func(string) *atgain60.Amp
 }
 
 func (h *Handlers) RegisterRoutes(group *echo.Group) {
@@ -28,7 +30,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 	// get state
 	ps62.GET("/output/:output/input", func(c echo.Context) error {
 		addr := c.Param("address")
-		vs := h.CreateVideoSwitcher(addr)
+		vs := h.CreateVideoSwitcher6x2(addr)
 		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
 
 		l.Printf("Getting inputs")
@@ -54,7 +56,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 
 	ps62.GET("/block/:block/volume", func(c echo.Context) error {
 		addr := c.Param("address")
-		vs := h.CreateVideoSwitcher(addr)
+		vs := h.CreateVideoSwitcher6x2(addr)
 		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
 
 		l.Printf("Getting volumes")
@@ -80,7 +82,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 
 	ps62.GET("/block/:block/muted", func(c echo.Context) error {
 		addr := c.Param("address")
-		vs := h.CreateVideoSwitcher(addr)
+		vs := h.CreateVideoSwitcher6x2(addr)
 		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
 
 		l.Printf("Getting mutes")
@@ -107,7 +109,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 	// set state
 	ps62.GET("/output/:output/input/:input", func(c echo.Context) error {
 		addr := c.Param("address")
-		vs := h.CreateVideoSwitcher(addr)
+		vs := h.CreateVideoSwitcher6x2(addr)
 		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
 		out := c.Param("output")
 		in := c.Param("input")
@@ -128,7 +130,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 
 	ps62.GET("/block/:block/volume/:volume", func(c echo.Context) error {
 		addr := c.Param("address")
-		vs := h.CreateVideoSwitcher(addr)
+		vs := h.CreateVideoSwitcher6x2(addr)
 		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
 		block := c.Param("block")
 
@@ -153,7 +155,161 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 
 	ps62.GET("/block/:block/muted/:mute", func(c echo.Context) error {
 		addr := c.Param("address")
-		vs := h.CreateVideoSwitcher(addr)
+		vs := h.CreateVideoSwitcher6x2(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+		block := c.Param("block")
+
+		mute, err := strconv.ParseBool(c.Param("mute"))
+		if err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+
+		l.Printf("Setting mute on %q to %t", block, mute)
+
+		err = vs.SetMute(c.Request().Context(), block, mute)
+		if err != nil {
+			l.Printf("unable to set mute: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+
+		l.Printf("Set mute")
+		return c.JSON(http.StatusOK, status.Mute{
+			Muted: mute,
+		})
+	})
+
+	// atlona 5x1
+	at52 := group.Group("/AT-UHD-SW-52ED/:address")
+
+	// get state
+	at52.GET("/output/:output/input", func(c echo.Context) error {
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher5x1(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+
+		l.Printf("Getting inputs")
+
+		inputs, err := vs.AudioVideoInputs(c.Request().Context())
+		if err != nil {
+			l.Printf("unable to get inputs: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+
+		out := c.Param("output")
+		in, ok := inputs[out]
+		if !ok {
+			l.Printf("invalid output %q requested", out)
+			return c.String(http.StatusBadRequest, "invalid output")
+		}
+
+		l.Printf("Got inputs: %+v", inputs)
+		return c.JSON(http.StatusOK, status.Input{
+			Input: fmt.Sprintf("%v:%v", in, out),
+		})
+	})
+
+	at52.GET("/block/:block/volume", func(c echo.Context) error {
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher5x1(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+
+		l.Printf("Getting volumes")
+
+		vols, err := vs.Volumes(c.Request().Context(), []string{})
+		if err != nil {
+			l.Printf("unable to get volumes: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+
+		block := c.Param("block")
+		vol, ok := vols[block]
+		if !ok {
+			l.Printf("invalid block %q requested", block)
+			return c.String(http.StatusBadRequest, "invalid block")
+		}
+
+		l.Printf("Got volumes: %+v", vols)
+		return c.JSON(http.StatusOK, status.Volume{
+			Volume: vol,
+		})
+	})
+
+	at52.GET("/block/:block/muted", func(c echo.Context) error {
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher5x1(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+
+		l.Printf("Getting mutes")
+
+		mutes, err := vs.Mutes(c.Request().Context(), []string{})
+		if err != nil {
+			l.Printf("unable to get mutes: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+
+		block := c.Param("block")
+		mute, ok := mutes[block]
+		if !ok {
+			l.Printf("invalid block %q requested", block)
+			return c.String(http.StatusBadRequest, "invalid block")
+		}
+
+		l.Printf("Got mutes: %+v", mutes)
+		return c.JSON(http.StatusOK, status.Mute{
+			Muted: mute,
+		})
+	})
+
+	// set state
+	at52.GET("/output/:output/input/:input", func(c echo.Context) error {
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher5x1(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+		out := c.Param("output")
+		in := c.Param("input")
+
+		l.Printf("Setting AV input on %q to %q", out, in)
+
+		err := vs.SetAudioVideoInput(c.Request().Context(), out, in)
+		if err != nil {
+			l.Printf("unable to set AV input: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+
+		l.Printf("Set AV input")
+		return c.JSON(http.StatusOK, status.Input{
+			Input: fmt.Sprintf("%v:%v", in, out),
+		})
+	})
+
+	at52.GET("/block/:block/volume/:volume", func(c echo.Context) error {
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher5x1(addr)
+		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
+		block := c.Param("block")
+
+		vol, err := strconv.Atoi(c.Param("volume"))
+		if err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+
+		l.Printf("Setting volume on %q to %d", block, vol)
+
+		err = vs.SetVolume(c.Request().Context(), block, vol)
+		if err != nil {
+			l.Printf("unable to set volume: %s", err)
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+
+		l.Printf("Set volume")
+		return c.JSON(http.StatusOK, status.Volume{
+			Volume: vol,
+		})
+	})
+
+	at52.GET("/block/:block/muted/:mute", func(c echo.Context) error {
+		addr := c.Param("address")
+		vs := h.CreateVideoSwitcher5x1(addr)
 		l := log.New(os.Stderr, fmt.Sprintf("[%v] ", addr), log.Ldate|log.Ltime|log.Lmicroseconds)
 		block := c.Param("block")
 

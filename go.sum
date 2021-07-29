@@ -4,6 +4,7 @@ github.com/byuoitav/atlona v0.1.9 h1:pBneo7Hxo1U0RvhAyk7S0A88e/4bo2KxOLEP8dxnnhM
 github.com/byuoitav/atlona v0.1.9/go.mod h1:uGPD/c2qFfUdExcKDoPy8e5VMq41QfLgmwcW6VqckKA=
 github.com/byuoitav/common v0.0.0-20200521193927-1fdf4e0a4271 h1:3bUfk879CvOFb+HDPugqk0GFy7oyJDU7t/r9zC2c7j8=
 github.com/byuoitav/common v0.0.0-20200521193927-1fdf4e0a4271/go.mod h1:YTDTFEmez7HU3oyCIWjU3RfQ/P6v24LEzH5YUebph7I=
+github.com/byuoitav/connpool v0.4.1 h1:pYqy5iEWY18Hwub+q9wuJgzIzRA4263s9UkjQbC0x2k=
 github.com/byuoitav/connpool v0.4.1/go.mod h1:9jVn2IL91Wp6eHEymqxZ5v7zPy07FtIWp/JIfDCMGQY=
 github.com/byuoitav/endpoint-authorization-controller v0.0.0-20190306172901-dd51e868d6df h1:VJQgi+ZkQEHcS5Vn1ulM/CPQ15RWgDXKBeM6JOLA2fs=
 github.com/byuoitav/endpoint-authorization-controller v0.0.0-20190306172901-dd51e868d6df/go.mod h1:CQ4byB9NvP3rx434/7W2Rqm55p3o9J0Mv081B9dBTns=

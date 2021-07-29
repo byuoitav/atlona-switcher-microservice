@@ -9,7 +9,8 @@ import (
 	"time"
 
 	atgain60 "github.com/byuoitav/atlona/AT-GAIN-60"
-	"github.com/byuoitav/atlona/AT-OME-PS62"
+	atomeps62 "github.com/byuoitav/atlona/AT-OME-PS62"
+	atuhdsw52ed "github.com/byuoitav/atlona/AT-UHD-SW-52ED"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/spf13/pflag"
@@ -44,7 +45,7 @@ func main() {
 	zapLog, _ := cfg.Build()
 
 	handlers := Handlers{
-		CreateVideoSwitcher: func(addr string) *atomeps62.AtlonaVideoSwitcher6x2 {
+		CreateVideoSwitcher6x2: func(addr string) *atomeps62.AtlonaVideoSwitcher6x2 {
 			if vs, ok := switchers.Load(addr); ok {
 				return vs.(*atomeps62.AtlonaVideoSwitcher6x2)
 			}
@@ -55,6 +56,16 @@ func main() {
 				Password:     password,
 				RequestDelay: 500 * time.Millisecond,
 			}
+
+			switchers.Store(addr, vs)
+			return vs
+		},
+		CreateVideoSwitcher5x1: func(addr string) *atuhdsw52ed.AtlonaVideoSwitcher5x1 {
+			if vs, ok := switchers.Load(addr); ok {
+				return vs.(*atuhdsw52ed.AtlonaVideoSwitcher5x1)
+			}
+
+			vs := atuhdsw52ed.NewAtlonaVideoSwitcher5x1(addr, nil)
 
 			switchers.Store(addr, vs)
 			return vs
