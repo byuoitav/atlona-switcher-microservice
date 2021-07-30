@@ -196,7 +196,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 		}
 
 		out := c.Param("output")
-		in, ok := inputs[out]
+		in, ok := inputs[""]
 		if !ok {
 			l.Printf("invalid output %q requested", out)
 			return c.String(http.StatusBadRequest, "invalid output")
@@ -222,7 +222,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 		}
 
 		block := c.Param("block")
-		vol, ok := vols[block]
+		vol, ok := vols[""]
 		if !ok {
 			l.Printf("invalid block %q requested", block)
 			return c.String(http.StatusBadRequest, "invalid block")
@@ -248,7 +248,7 @@ func (h *Handlers) RegisterRoutes(group *echo.Group) {
 		}
 
 		block := c.Param("block")
-		mute, ok := mutes[block]
+		mute, ok := mutes[""]
 		if !ok {
 			l.Printf("invalid block %q requested", block)
 			return c.String(http.StatusBadRequest, "invalid block")

@@ -65,7 +65,7 @@ func main() {
 				return vs.(*atuhdsw52ed.AtlonaVideoSwitcher5x1)
 			}
 
-			vs := atuhdsw52ed.NewAtlonaVideoSwitcher5x1(addr, nil)
+			vs := atuhdsw52ed.NewAtlonaVideoSwitcher5x1(addr)
 
 			switchers.Store(addr, vs)
 			return vs
