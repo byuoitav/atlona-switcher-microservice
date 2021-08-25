@@ -27,7 +27,6 @@ func SetInput(ectx echo.Context) error {
 	}
 	ctx := ectx.Request().Context()
 	er := switcher5x1.SetInput(ctx, address, input)
-	fmt.Println("IM HERE!!!!!!!!")
 	if er != nil {
 		l.Warnf("%s", er.Error())
 		return ectx.String(http.StatusInternalServerError, er.Error())
